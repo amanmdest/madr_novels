@@ -17,10 +17,6 @@ class UsuarioSaida(BaseModel):
     email: EmailStr
 
 
-class UsuarioDB(UsuarioEntrada):
-    id: int
-
-
 class UsuarioLista(BaseModel):
     users: list[UsuarioSaida]
 
@@ -31,6 +27,7 @@ class RomancistaEntrada(BaseModel):
 
 class RomancistaSaida(BaseModel):
     id: int
+    livros: list
 
 
 class RomancistasLista(BaseModel):
