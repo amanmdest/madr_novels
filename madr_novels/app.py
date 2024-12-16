@@ -13,5 +13,5 @@ app.include_router(livros.router)
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Mensagem)
-def home():
-    return {'mensagem': 'gracias a caetano por invitar-me'}
+def raiz():
+    return {'mensagem': 'gracias a caetano por invitar-me!'}
