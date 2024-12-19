@@ -15,15 +15,24 @@ T_session = Annotated[Session, Depends(get_session)]
 
 
 @router.get('/', status_code=HTTPStatus.OK)
-def listar_romancistas(session: T_session, limit: int = 10, skip: int = 0):
+def romancistas(session: T_session, limit: int = 10, skip: int = 0):
     romancistas = session.scalars(select(Romancista).limit(limit).offset(skip))
     return {'romancistas': romancistas}
 
 
 @router.post(
-    '/novo_romancista',
+    '/',
     status_code=HTTPStatus.CREATED,
     response_model=RomancistaSaida,
 )
 def adcionar_romancista(romancista: RomancistaEntrada):
     return romancista
+
+
+# def romancista_por_id():
+
+
+# def atualizar_romancista():
+
+
+# def deletar_romancista():

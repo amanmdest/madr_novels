@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class Mensagem(BaseModel):
@@ -15,10 +15,11 @@ class UsuarioSaida(BaseModel):
     id: int
     username: str
     email: EmailStr
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UsuarioLista(BaseModel):
-    users: list[UsuarioSaida]
+    usuarios: list[UsuarioSaida]
 
 
 class RomancistaEntrada(BaseModel):
@@ -45,4 +46,4 @@ class LivroSaida(BaseModel):
 
 
 class LivrosLista(BaseModel):
-    livros: list[RomancistaSaida]
+    livros: list[LivroSaida]
