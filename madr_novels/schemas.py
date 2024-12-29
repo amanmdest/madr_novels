@@ -22,19 +22,6 @@ class UsuarioLista(BaseModel):
     usuarios: list[UsuarioSaida]
 
 
-class RomancistaEntrada(BaseModel):
-    nome: str
-
-
-class RomancistaSaida(BaseModel):
-    id: int
-    livros: list
-
-
-class RomancistasLista(BaseModel):
-    romancistas: list[RomancistaSaida]
-
-
 class LivroEntrada(BaseModel):
     titulo: str
     ano: int
@@ -43,7 +30,24 @@ class LivroEntrada(BaseModel):
 
 class LivroSaida(BaseModel):
     id: int
+    titulo: str
+    ano: int
+    romancista_id: int
 
 
 class LivrosLista(BaseModel):
     livros: list[LivroSaida]
+
+
+class RomancistaEntrada(BaseModel):
+    nome: str
+
+
+class RomancistaSaida(BaseModel):
+    id: int
+    nome: str
+    livros: list[LivroSaida]
+
+
+class RomancistasLista(BaseModel):
+    romancistas: list[RomancistaSaida]

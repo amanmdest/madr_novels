@@ -21,14 +21,14 @@ def test_criar_conta(cliente):
     }
 
 
-def test_usuarios(cliente):
+def test_listar_usuarios(cliente):
     response = cliente.get('/usuarios/')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'usuarios': []}
 
 
-def test_usuarios_com_usuario(cliente, usuario):
+def test_listar_usuarios_com_usuario(cliente, usuario):
     usuario_schema = UsuarioSaida.model_validate(usuario).model_dump()
     response = cliente.get('/usuarios/')
 
@@ -40,7 +40,7 @@ def test_criar_conta_username_repetido(cliente, usuario):
     response = cliente.post(
         '/usuarios/',
         json={
-            'username': 'cienanosdesoledad',
+            'username': usuario.username,
             'email': 'pamonha@montanha.com',
             'senha': 'naosei',
         },
@@ -55,7 +55,7 @@ def test_criar_conta_email_repetido(cliente, usuario):
         '/usuarios/',
         json={
             'username': 'barril',
-            'email': 'latino@america.com',
+            'email': usuario.email,
             'senha': 'naosei',
         },
     )
@@ -64,10 +64,29 @@ def test_criar_conta_email_repetido(cliente, usuario):
     assert response.json() == {'detail': 'Email já está sendo utilizado'}
 
 
+def test_update_usuario(cliente, usuario):
+    response = cliente.put(
+        f'/usuarios/{usuario.id}',
+        json={
+            'username': 'barril',
+            'email': 'latino@america.com',
+            'senha': 'naosei',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'id': usuario.id,
+        'username': 'barril',
+        'email': 'latino@america.com',
+        # 'senha': 'naosei',
+    }
+
+
 def test_deletar_usuario(cliente, usuario):
     response = cliente.delete(f'/usuarios/{usuario.id}')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'mensagem': f'usuario {usuario.username} deletadao'
+        'mensagem': f'Usuário {usuario.username} deletadao'
     }

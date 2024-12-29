@@ -26,6 +26,10 @@ def usuarios(session: T_Session, limit: int = 10, skip: int = 0):
     return {'usuarios': usuario}
 
 
+# @router.get('/{usuario_id}', response_model=UsuarioSaida)
+# def usuario_por_id():
+
+
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
 def criar_conta(usuario: UsuarioEntrada, session: T_Session):
     db_usuario = session.scalar(
@@ -62,13 +66,37 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
     return usuario
 
 
-# def usuario_por_id():
+@router.put(
+    '/{usuario_id}', status_code=HTTPStatus.OK, response_model=UsuarioSaida
+)
+def atualizar_conta(
+    usuario_id: int,
+    usuario: UsuarioEntrada,
+    session: T_Session,
+):
+    db_usuario = session.scalar(
+        select(Usuario).where(Usuario.id == usuario_id)
+    )
+
+    if not db_usuario:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Usuário não encontrado'
+        )
+
+    db_usuario.email = usuario.email
+    db_usuario.username = usuario.username
+    db_usuario.senha = usuario.senha
+
+    session.add(db_usuario)
+    session.commit()
+    session.refresh(db_usuario)
+
+    return db_usuario
 
 
-# def atualizar_conta():
-
-
-@router.delete('/{usuario_id}', response_model=Mensagem)
+@router.delete(
+    '/{usuario_id}', status_code=HTTPStatus.OK, response_model=Mensagem
+)
 def deletar_conta(usuario_id: int, session: T_Session):
     db_usuario = session.scalar(
         select(Usuario).where(Usuario.id == usuario_id)
@@ -76,10 +104,10 @@ def deletar_conta(usuario_id: int, session: T_Session):
 
     if not db_usuario:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuario não encontrado'
+            status_code=HTTPStatus.NOT_FOUND, detail='Usuário não encontrado'
         )
 
     session.delete(db_usuario)
     session.commit()
 
-    return {'mensagem': f'usuario {db_usuario.username} deletadao'}
+    return {'mensagem': f'Usuário {db_usuario.username} deletadao'}

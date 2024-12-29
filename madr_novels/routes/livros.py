@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -25,9 +25,25 @@ def livros(session: T_session, limit: int = 10, skip: int = 0):
     status_code=HTTPStatus.CREATED,
     response_model=LivroSaida,
 )
-def adcionar_livro(
-    livro: LivroEntrada,
-):
+def novo_livro(livro: LivroEntrada, session: T_session):
+    db_livro = session.scalar(
+        select(Livro).where(Livro.titulo == livro.titulo)
+    )
+
+    if db_livro:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            details='Livro já cadastrado no acervo! ;D',
+        )
+
+    livro = Livro(
+        titulo=livro.titulo, ano=livro.ano, romancista_id=livro.romancista_id
+    )
+
+    session.add(livro)
+    session.commit()
+    session.refresh(livro)
+
     return livro
 
 
