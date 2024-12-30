@@ -79,7 +79,6 @@ def test_update_usuario(cliente, usuario):
         'id': usuario.id,
         'username': 'barril',
         'email': 'latino@america.com',
-        # 'senha': 'naosei',
     }
 
 

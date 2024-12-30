@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from madr_novels.app import app
 from madr_novels.database import get_session
-from madr_novels.models import Usuario, table_registry
+from madr_novels.models import table_registry
+from madr_novels.security import senha_hash
+from tests.factories import LivroFabrica, RomancistaFabrica, UsuarioFabrica
 
 
 @pytest.fixture
@@ -37,13 +39,33 @@ def sessao():
 
 @pytest.fixture
 def usuario(sessao):
-    usuario = Usuario(
-        username='cienanosdesoledad',
-        email='latino@america.com',
-        senha='gabrielgarcia',
-    )
+    chave = 'avocado'
+
+    usuario = UsuarioFabrica(senha=senha_hash(chave))
     sessao.add(usuario)
     sessao.commit()
     sessao.refresh(usuario)
 
+    # usuario.clean_password(usuario)
+
     return usuario
+
+
+@pytest.fixture
+def romancista(sessao):
+    romancista = RomancistaFabrica()
+    sessao.add(romancista)
+    sessao.commit()
+    sessao.refresh(romancista)
+
+    return romancista
+
+
+@pytest.fixture
+def livro(sessao):
+    livro = LivroFabrica()
+    sessao.add(livro)
+    sessao.commit()
+    sessao.refresh(livro)
+
+    return livro

@@ -13,7 +13,7 @@ from madr_novels.schemas import (
     UsuarioLista,
     UsuarioSaida,
 )
-from madr_novels.security import get_password_hash
+from madr_novels.security import senha_hash
 
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
@@ -56,7 +56,7 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
     usuario = Usuario(
         username=usuario.username,
         email=usuario.email,
-        senha=get_password_hash(usuario.senha),
+        senha=senha_hash(usuario.senha),
     )
 
     session.add(usuario)

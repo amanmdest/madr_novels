@@ -14,12 +14,6 @@ router = APIRouter(prefix='/livros', tags=['livros'])
 T_session = Annotated[Session, Depends(get_session)]
 
 
-@router.get('/', response_model=LivrosLista)
-def livros(session: T_session, limit: int = 10, skip: int = 0):
-    livros = session.scalars(select(Livro).limit(limit).offset(skip))
-    return {'livros': livros}
-
-
 @router.post(
     '/',
     status_code=HTTPStatus.CREATED,
@@ -33,7 +27,7 @@ def novo_livro(livro: LivroEntrada, session: T_session):
     if db_livro:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            details='Livro já cadastrado no acervo! ;D',
+            detail='Livro já cadastrado no acervo bb! ;D',
         )
 
     livro = Livro(
@@ -47,10 +41,51 @@ def novo_livro(livro: LivroEntrada, session: T_session):
     return livro
 
 
-# def livro_por_id():
+@router.get('/', status_code=HTTPStatus.OK, response_model=LivrosLista)
+def livros(session: T_session, limit: int = 10, skip: int = 0):
+    livros = session.scalars(select(Livro).limit(limit).offset(skip))
+    return {'livros': livros}
 
 
-# def atualizar_livro():
+@router.get(
+    '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
+)
+def livro_por_id(livro_id: int, session: T_session): ...
 
 
-# def deletar_livro():
+@router.put(
+    '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
+)
+def atualizar_livro(livro_id: int, session: T_session):
+    db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
+
+    if not db_livro:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Não encontramos o livro no acervo.',
+        )
+
+    session.add(db_livro)
+    session.commit()
+    session.refresh(db_livro)
+
+    return db_livro
+
+
+@router.delete(
+    '/{livro_id}',
+    status_code=HTTPStatus.OK,
+)
+def deletar_livro(livro_id: int, session: T_session):
+    db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
+
+    if not db_livro:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Não encontramos o livro no acervo.',
+        )
+
+    session.delete(db_livro)
+    session.commit()
+
+    return db_livro
