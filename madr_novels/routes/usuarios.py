@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,7 @@ from madr_novels.security import senha_hash
 
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
+T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 T_Session = Annotated[Session, Depends(get_session)]
 
 
@@ -53,17 +55,19 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
                 detail='Email já está sendo utilizado',
             )
 
-    usuario = Usuario(
+    hash_senha = senha_hash(usuario.senha)
+
+    db_usuario = Usuario(
         username=usuario.username,
         email=usuario.email,
-        senha=senha_hash(usuario.senha),
+        senha=hash_senha,
     )
 
-    session.add(usuario)
+    session.add(db_usuario)
     session.commit()
-    session.refresh(usuario)
+    session.refresh(db_usuario)
 
-    return usuario
+    return db_usuario
 
 
 @router.put(
@@ -85,7 +89,7 @@ def atualizar_conta(
 
     db_usuario.email = usuario.email
     db_usuario.username = usuario.username
-    db_usuario.senha = usuario.senha
+    db_usuario.senha = senha_hash(usuario.senha)
 
     session.add(db_usuario)
     session.commit()

@@ -46,7 +46,7 @@ def usuario(sessao):
     sessao.commit()
     sessao.refresh(usuario)
 
-    # usuario.clean_password(usuario)
+    usuario.chave_limpa = 'avocado'
 
     return usuario
 

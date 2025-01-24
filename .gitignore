@@ -1,8 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
+migrations
 notes.txt
 faker_tests.py
+.python-version
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

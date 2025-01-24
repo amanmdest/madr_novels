@@ -8,8 +8,8 @@ def test_listar_livros(cliente):
     response.json() == {'livros': []}
 
 
-# def test_listar_livros(cliente):
-#     response = cliente.get('/livros/')
+# def test_listar_livro_por_id(cliente):
+#     response = cliente.get('/livros/{livro.id}')
 #
 #     response.status_code == HTTPStatus.OK
 #     response.json() == {'livros': []}

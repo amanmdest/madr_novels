@@ -1,4 +1,4 @@
-import factory
+import factory  # type: ignore
 
 from madr_novels.models import Livro, Romancista, Usuario
 

@@ -51,3 +51,8 @@ class RomancistaSaida(BaseModel):
 
 class RomancistasLista(BaseModel):
     romancistas: list[RomancistaSaida]
+
+
+class Token(BaseModel):
+    token_acesso: str
+    token_tipo: str
