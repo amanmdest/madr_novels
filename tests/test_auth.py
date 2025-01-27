@@ -10,4 +10,4 @@ def test_login_acessar_token(cliente, usuario):
 
     assert response.status_code == HTTPStatus.OK
     assert 'token_acesso' in token
-    assert token['token_tipo'] == "Bearer"
+    assert token['token_tipo'] == 'Bearer'

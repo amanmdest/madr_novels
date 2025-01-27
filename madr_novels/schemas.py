@@ -56,3 +56,7 @@ class RomancistasLista(BaseModel):
 class Token(BaseModel):
     token_acesso: str
     token_tipo: str
+
+
+class TokenData(BaseModel):
+    username: str | None = None

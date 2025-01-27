@@ -14,22 +14,28 @@ from madr_novels.schemas import (
     UsuarioLista,
     UsuarioSaida,
 )
-from madr_novels.security import senha_hash
+from madr_novels.security import (
+    pegar_usuario_autorizado,
+    senha_hash,
+)
 
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
+T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 T_Session = Annotated[Session, Depends(get_session)]
 
 
 @router.get('/', response_model=UsuarioLista)
 def usuarios(session: T_Session, limit: int = 10, skip: int = 0):
-    usuario = session.scalars(select(Usuario).limit(limit).offset(skip))
-    return {'usuarios': usuario}
+    usuarios = session.scalars(select(Usuario).limit(limit).offset(skip))
+    return {'usuarios': usuarios}
 
 
-# @router.get('/{usuario_id}', response_model=UsuarioSaida)
-# def usuario_por_id():
+@router.get('/{usuario_id}', response_model=UsuarioSaida)
+def usuario_por_id(usuario_id: int, session: T_Session):
+    usuario = session.scalar(select(Usuario).where(usuario_id == Usuario.id))
+    return {'usuario': usuario}
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
@@ -74,44 +80,45 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
     '/{usuario_id}', status_code=HTTPStatus.OK, response_model=UsuarioSaida
 )
 def atualizar_conta(
-    usuario_id: int,
     usuario: UsuarioEntrada,
+    usuario_autorizado: T_UsuarioAutorizado,
+    usuario_id: int,
     session: T_Session,
 ):
-    db_usuario = session.scalar(
-        select(Usuario).where(Usuario.id == usuario_id)
-    )
-
-    if not db_usuario:
+    if usuario_autorizado.id != usuario_id:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuário não encontrado'
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Você não possui as permissões esperadas pela aplicação.',
         )
 
-    db_usuario.email = usuario.email
-    db_usuario.username = usuario.username
-    db_usuario.senha = senha_hash(usuario.senha)
+    usuario_autorizado.email = usuario.email
+    usuario_autorizado.username = usuario.username
+    usuario_autorizado.senha = senha_hash(usuario.senha)
 
-    session.add(db_usuario)
+    session.add(usuario_autorizado)
     session.commit()
-    session.refresh(db_usuario)
+    session.refresh(usuario_autorizado)
 
-    return db_usuario
+    return usuario_autorizado
 
 
 @router.delete(
     '/{usuario_id}', status_code=HTTPStatus.OK, response_model=Mensagem
 )
-def deletar_conta(usuario_id: int, session: T_Session):
-    db_usuario = session.scalar(
-        select(Usuario).where(Usuario.id == usuario_id)
-    )
-
-    if not db_usuario:
+def deletar_conta(
+    usuario_autorizado: T_UsuarioAutorizado,
+    usuario_id: int,
+    session: T_Session,
+):
+    if usuario_autorizado.id != usuario_id:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuário não encontrado'
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Você não possui as permissões esperadas pela aplicação.',
         )
 
-    session.delete(db_usuario)
+    session.delete(usuario_autorizado)
     session.commit()
 
-    return {'mensagem': f'Usuário {db_usuario.username} deletadao'}
+    return {
+        'mensagem': f'Usuário {usuario_autorizado.username} virou saudade.'
+    }

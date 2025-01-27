@@ -64,7 +64,7 @@ def test_criar_conta_email_repetido(cliente, usuario):
     assert response.json() == {'detail': 'Email já está sendo utilizado'}
 
 
-def test_update_usuario(cliente, usuario):
+def test_update_usuario(cliente, usuario, token):
     response = cliente.put(
         f'/usuarios/{usuario.id}',
         json={
@@ -72,6 +72,7 @@ def test_update_usuario(cliente, usuario):
             'email': 'latino@america.com',
             'senha': 'naosei',
         },
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -82,10 +83,12 @@ def test_update_usuario(cliente, usuario):
     }
 
 
-def test_deletar_usuario(cliente, usuario):
-    response = cliente.delete(f'/usuarios/{usuario.id}')
+def test_deletar_usuario(cliente, usuario, token):
+    response = cliente.delete(
+        f'/usuarios/{usuario.id}', headers={'Authorization': f'Bearer {token}'}
+    )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'mensagem': f'Usuário {usuario.username} deletadao'
+        'mensagem': f'Usuário {usuario.username} virou saudade.'
     }
