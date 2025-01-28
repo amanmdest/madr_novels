@@ -74,7 +74,7 @@ def livro(sessao):
 @pytest.fixture
 def token(cliente, usuario):
     response = cliente.post(
-        '/token',
+        '/token/',
         data={'username': usuario.email, 'password': usuario.chave_limpa},
     )
     return response.json()['token_acesso']

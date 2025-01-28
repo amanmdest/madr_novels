@@ -2,7 +2,6 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -22,7 +21,6 @@ from madr_novels.security import (
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
-T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 T_Session = Annotated[Session, Depends(get_session)]
 
 

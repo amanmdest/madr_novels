@@ -13,16 +13,14 @@ from zoneinfo import ZoneInfo
 
 from madr_novels.database import get_session
 from madr_novels.models import Usuario
-
-# from madr_novels.models import Usuario
-# from madr_novels.schemas import TokenData
+from madr_novels.schemas import TokenData
 from madr_novels.settings import Settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+T_Session = Annotated[Session, Depends(get_session)]
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/token/')
 pwd_context = PasswordHash.recommended()
 settings = Settings()
-
-T_Session = Annotated[Session, Depends(get_session)]
 
 
 def senha_hash(senha: str):
@@ -64,11 +62,13 @@ def pegar_usuario_autorizado(
         username: str = payload.get('sub')
         if not username:
             raise credenciais_invalidas
-
+        token_data = TokenData(username=username)
     except PyJWTError:
         raise credenciais_invalidas
 
-    usuario = session.scalar(select(Usuario).where(Usuario.email == username))
+    usuario = session.scalar(
+        select(Usuario).where(Usuario.email == token_data.username)
+    )
 
     if not usuario:
         raise credenciais_invalidas

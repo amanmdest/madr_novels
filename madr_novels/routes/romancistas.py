@@ -6,16 +6,18 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
-from madr_novels.models import Romancista
+from madr_novels.models import Romancista, Usuario
 from madr_novels.schemas import (
     RomancistaEntrada,
     RomancistaSaida,
     RomancistasLista,
 )
+from madr_novels.security import pegar_usuario_autorizado
 
 router = APIRouter(prefix='/romancistas', tags=['romancistas'])
 
-T_session = Annotated[Session, Depends(get_session)]
+T_Session = Annotated[Session, Depends(get_session)]
+T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
 @router.post(
@@ -23,7 +25,11 @@ T_session = Annotated[Session, Depends(get_session)]
     status_code=HTTPStatus.CREATED,
     response_model=RomancistaSaida,
 )
-def novo_romancista(romancista: RomancistaEntrada, session: T_session):
+def novo_romancista(
+    romancista: RomancistaEntrada,
+    session: T_Session,
+    usuario_autorizado: T_UsuarioAutorizado,
+):
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.nome == romancista.nome)
     )
@@ -44,7 +50,7 @@ def novo_romancista(romancista: RomancistaEntrada, session: T_session):
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=RomancistasLista)
-def romancistas(session: T_session, limit: int = 10, skip: int = 0):
+def romancistas(session: T_Session, limit: int = 10, skip: int = 0):
     romancistas = session.scalars(select(Romancista).limit(limit).offset(skip))
     return {'romancistas': romancistas}
 
@@ -54,7 +60,7 @@ def romancistas(session: T_session, limit: int = 10, skip: int = 0):
     status_code=HTTPStatus.OK,
     response_model=RomancistaSaida,
 )
-def romancista_por_id(romancista_id: int, session: T_session):
+def romancista_por_id(romancista_id: int, session: T_Session):
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
@@ -74,7 +80,10 @@ def romancista_por_id(romancista_id: int, session: T_session):
     response_model=RomancistaSaida,
 )
 def atualizar_romancista(
-    romancista_id: int, romancista: RomancistaEntrada, session: T_session
+    romancista_id: int,
+    romancista: RomancistaEntrada,
+    session: T_Session,
+    usuario_autorizado: T_UsuarioAutorizado,
 ):
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
@@ -96,7 +105,11 @@ def atualizar_romancista(
 
 
 @router.delete('/{romancista_id}', status_code=HTTPStatus.OK)
-def deletar_romancista(romancista_id: int, session: T_session):
+def deletar_romancista(
+    romancista_id: int,
+    session: T_Session,
+    usuario_autorizado: T_UsuarioAutorizado,
+):
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )

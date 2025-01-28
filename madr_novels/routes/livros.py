@@ -6,12 +6,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
-from madr_novels.models import Livro
+from madr_novels.models import Livro, Usuario
 from madr_novels.schemas import LivroEntrada, LivroSaida, LivrosLista
+from madr_novels.security import pegar_usuario_autorizado
 
 router = APIRouter(prefix='/livros', tags=['livros'])
 
-T_session = Annotated[Session, Depends(get_session)]
+T_Session = Annotated[Session, Depends(get_session)]
+T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
 @router.post(
@@ -19,7 +21,11 @@ T_session = Annotated[Session, Depends(get_session)]
     status_code=HTTPStatus.CREATED,
     response_model=LivroSaida,
 )
-def novo_livro(livro: LivroEntrada, session: T_session):
+def novo_livro(
+    livro: LivroEntrada,
+    session: T_Session,
+    usuario_autorizado: T_UsuarioAutorizado,
+):
     db_livro = session.scalar(
         select(Livro).where(Livro.titulo == livro.titulo)
     )
@@ -42,7 +48,7 @@ def novo_livro(livro: LivroEntrada, session: T_session):
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=LivrosLista)
-def livros(session: T_session, limit: int = 10, skip: int = 0):
+def livros(session: T_Session, limit: int = 10, skip: int = 0):
     livros = session.scalars(select(Livro).limit(limit).offset(skip))
     return {'livros': livros}
 
@@ -50,13 +56,15 @@ def livros(session: T_session, limit: int = 10, skip: int = 0):
 @router.get(
     '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
 )
-def livro_por_id(livro_id: int, session: T_session): ...
+def livro_por_id(livro_id: int, session: T_Session): ...
 
 
 @router.put(
     '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
 )
-def atualizar_livro(livro_id: int, session: T_session):
+def atualizar_livro(
+    livro_id: int, session: T_Session, usuario_autorizado: T_UsuarioAutorizado
+):
     db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
@@ -72,11 +80,10 @@ def atualizar_livro(livro_id: int, session: T_session):
     return db_livro
 
 
-@router.delete(
-    '/{livro_id}',
-    status_code=HTTPStatus.OK,
-)
-def deletar_livro(livro_id: int, session: T_session):
+@router.delete('/{livro_id}', status_code=HTTPStatus.OK)
+def deletar_livro(
+    livro_id: int, session: T_Session, usuario_autorizado: T_UsuarioAutorizado
+):
     db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
