@@ -70,7 +70,7 @@ def atualizar_livro(
     if not db_livro:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            detail='Não encontramos o livro no acervo.',
+            detail='Não encontramos o livro no acervo',
         )
 
     session.add(db_livro)
@@ -89,7 +89,7 @@ def deletar_livro(
     if not db_livro:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            detail='Não encontramos o livro no acervo.',
+            detail='Não encontramos o livro no acervo',
         )
 
     session.delete(db_livro)

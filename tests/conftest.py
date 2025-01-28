@@ -52,6 +52,20 @@ def usuario(sessao):
 
 
 @pytest.fixture
+def outro_usuario(sessao):
+    chave = 'potato'
+
+    usuario = UsuarioFabrica(senha=senha_hash(chave))
+    sessao.add(usuario)
+    sessao.commit()
+    sessao.refresh(usuario)
+
+    usuario.chave_limpa = 'potato'
+
+    return usuario
+
+
+@pytest.fixture
 def romancista(sessao):
     romancista = RomancistaFabrica()
     sessao.add(romancista)

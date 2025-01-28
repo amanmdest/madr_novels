@@ -92,7 +92,7 @@ def atualizar_romancista(
     if not db_romancista:
         raise HTTPException(
             status_code=HTTPStatus,
-            detail=f'{romancista_id} não foi encontrado no acervo.',
+            detail=f'{romancista_id} não foi encontrado no acervo',
         )
 
     db_romancista.nome = romancista.nome
@@ -117,7 +117,7 @@ def deletar_romancista(
     if not db_romancista:
         raise HTTPException(
             status_code=HTTPStatus,
-            detail=f'{romancista_id} não foi encontrado no acervo.',
+            detail=f'{romancista_id} não foi encontrado no acervo',
         )
 
     session.delete(db_romancista)

@@ -33,7 +33,14 @@ def usuarios(session: T_Session, limit: int = 10, skip: int = 0):
 @router.get('/{usuario_id}', response_model=UsuarioSaida)
 def usuario_por_id(usuario_id: int, session: T_Session):
     usuario = session.scalar(select(Usuario).where(usuario_id == Usuario.id))
-    return {'usuario': usuario}
+    # usuario_schema = UsuarioSaida.model_validate(usuario).model_dump()
+    if not usuario:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Usuario não foi encontrado',
+        )
+
+    return {'usuario': [usuario]}
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
@@ -85,8 +92,8 @@ def atualizar_conta(
 ):
     if usuario_autorizado.id != usuario_id:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='Você não possui as permissões esperadas pela aplicação.',
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Você não possui as permissões esperadas pela aplicação',
         )
 
     usuario_autorizado.email = usuario.email
@@ -110,13 +117,11 @@ def deletar_conta(
 ):
     if usuario_autorizado.id != usuario_id:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='Você não possui as permissões esperadas pela aplicação.',
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Você não possui as permissões esperadas pela aplicação',
         )
 
     session.delete(usuario_autorizado)
     session.commit()
 
-    return {
-        'mensagem': f'Usuário {usuario_autorizado.username} virou saudade.'
-    }
+    return {'mensagem': f'Usuário {usuario_autorizado.username} virou saudade'}

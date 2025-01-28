@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import decode, encode  # type: ignore
-from jwt.exceptions import PyJWTError  # type: ignore
+from jwt.exceptions import DecodeError, ExpiredSignatureError  # type: ignore
 from pwdlib import PasswordHash  # type: ignore
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -51,7 +51,7 @@ def pegar_usuario_autorizado(
 ):
     credenciais_invalidas = HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
-        detail='Erro de validação de credenciais.',
+        detail='Erro de validação de credenciais',
         headers={'WWW-Authenticate': 'Bearer'},
     )
 
@@ -63,7 +63,9 @@ def pegar_usuario_autorizado(
         if not username:
             raise credenciais_invalidas
         token_data = TokenData(username=username)
-    except PyJWTError:
+    except DecodeError:
+        raise credenciais_invalidas
+    except ExpiredSignatureError:
         raise credenciais_invalidas
 
     usuario = session.scalar(

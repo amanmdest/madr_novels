@@ -19,7 +19,7 @@ def test_novo_livro(cliente, token):
     response = cliente.post(
         '/livros/',
         json={'titulo': 'Moby Dick', 'ano': 1851, 'romancista_id': 1},
-        headers={'Authorization': f'Bearer {token}'}
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.CREATED
@@ -35,7 +35,7 @@ def test_livro_ja_cadastrado_no_acervo(cliente, livro, token):
     response = cliente.post(
         '/livros/',
         json={'titulo': livro.titulo, 'ano': 1851, 'romancista_id': 1},
-        headers={'Authorization': f'Bearer {token}'}
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -52,7 +52,7 @@ def test_atualizar_livro(cliente, livro, token):
             'ano': livro.ano,
             'romancista_id': livro.romancista_id,
         },
-        headers={'Authorization': f'Bearer {token}'}
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -66,8 +66,7 @@ def test_atualizar_livro(cliente, livro, token):
 
 def test_deletar_livro(cliente, livro, token):
     response = cliente.delete(
-        f'/livros/{livro.id}',
-        headers={'Authorization': f'Bearer {token}'}
+        f'/livros/{livro.id}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.OK
