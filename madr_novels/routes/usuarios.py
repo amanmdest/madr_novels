@@ -1,13 +1,14 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
 from madr_novels.models import Usuario
 from madr_novels.schemas import (
+    FiltroPag,
     Mensagem,
     UsuarioEntrada,
     UsuarioLista,
@@ -20,13 +21,21 @@ from madr_novels.security import (
 
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
-T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
+T_FiltroPag = Annotated[FiltroPag, Query()]
 T_Session = Annotated[Session, Depends(get_session)]
+T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
 @router.get('/', response_model=UsuarioLista)
-def usuarios(session: T_Session, limit: int = 10, skip: int = 0):
-    usuarios = session.scalars(select(Usuario).limit(limit).offset(skip))
+def usuarios(
+    filtro_usuarios: T_FiltroPag,
+    session: T_Session,
+):
+    usuarios = session.scalars(
+        select(Usuario)
+        .limit(filtro_usuarios.limit)
+        .offset(filtro_usuarios.offset)
+    )
     return {'usuarios': usuarios}
 
 

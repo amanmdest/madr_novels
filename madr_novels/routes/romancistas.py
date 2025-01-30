@@ -1,13 +1,14 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
 from madr_novels.models import Romancista, Usuario
 from madr_novels.schemas import (
+    FiltroPag,
     RomancistaEntrada,
     RomancistaSaida,
     RomancistasLista,
@@ -16,6 +17,7 @@ from madr_novels.security import pegar_usuario_autorizado
 
 router = APIRouter(prefix='/romancistas', tags=['romancistas'])
 
+T_FiltroPag = Annotated[FiltroPag, Query()]
 T_Session = Annotated[Session, Depends(get_session)]
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
@@ -50,8 +52,10 @@ def novo_romancista(
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=RomancistasLista)
-def romancistas(session: T_Session, limit: int = 10, skip: int = 0):
-    romancistas = session.scalars(select(Romancista).limit(limit).offset(skip))
+def romancistas(filtro_pag: T_FiltroPag, session: T_Session):
+    romancistas = session.scalars(
+        select(Romancista).limit(filtro_pag.limit).offset(filtro_pag.offset)
+    )
     return {'romancistas': romancistas}
 
 
