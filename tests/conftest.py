@@ -7,7 +7,7 @@ from madr_novels.app import app
 from madr_novels.database import get_session
 from madr_novels.models import table_registry
 from madr_novels.security import senha_hash
-from tests.factories import LivroFabrica, RomancistaFabrica, UsuarioFabrica
+from tests.factories import UsuarioFabrica
 
 
 @pytest.fixture
@@ -65,24 +65,24 @@ def outro_usuario(sessao):
     return usuario
 
 
-@pytest.fixture
-def romancista(sessao):
-    romancista = RomancistaFabrica()
-    sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+# @pytest.fixture
+# def romancista(sessao):
+#     romancista = RomancistaFabrica()
+#     sessao.add(romancista)
+#     sessao.commit()
+#     sessao.refresh(romancista)
 
-    return romancista
+#     return romancista
 
 
-@pytest.fixture
-def livro(sessao):
-    livro = LivroFabrica()
-    sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
+# @pytest.fixture
+# def livro(sessao):
+#     livro = LivroFabrica()
+#     sessao.add(livro)
+#     sessao.commit()
+#     sessao.refresh(livro)
 
-    return livro
+#     return livro
 
 
 @pytest.fixture

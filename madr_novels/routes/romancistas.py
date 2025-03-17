@@ -9,6 +9,7 @@ from madr_novels.database import get_session
 from madr_novels.models import Romancista, Usuario
 from madr_novels.schemas import (
     FiltroPag,
+    RomancistaAtualizado,
     RomancistaEntrada,
     RomancistaSaida,
     RomancistasLista,
@@ -85,7 +86,7 @@ def romancista_por_id(romancista_id: int, session: T_Session):
 )
 def atualizar_romancista(
     romancista_id: int,
-    romancista: RomancistaEntrada,
+    romancista: RomancistaAtualizado,
     session: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
@@ -95,8 +96,8 @@ def atualizar_romancista(
 
     if not db_romancista:
         raise HTTPException(
-            status_code=HTTPStatus,
-            detail=f'{romancista_id} não foi encontrado no acervo',
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Não encontramos o romancista no acervo',
         )
 
     db_romancista.nome = romancista.nome
@@ -120,7 +121,7 @@ def deletar_romancista(
 
     if not db_romancista:
         raise HTTPException(
-            status_code=HTTPStatus,
+            status_code=HTTPStatus.NOT_FOUND,
             detail=f'{romancista_id} não foi encontrado no acervo',
         )
 

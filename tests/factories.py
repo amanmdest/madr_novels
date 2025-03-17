@@ -25,4 +25,4 @@ class LivroFabrica(factory.Factory):
 
     titulo = factory.Faker('sentence', nb_words=2)
     ano = factory.Faker('year')
-    romancista_id = factory.Sequence(lambda n: n)
+    romancista_id = factory.Sequence(lambda n: n)  # 1

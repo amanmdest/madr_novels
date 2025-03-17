@@ -9,6 +9,7 @@ from madr_novels.database import get_session
 from madr_novels.models import Livro, Usuario
 from madr_novels.schemas import (
     FiltroPag,
+    LivroAtualizado,
     LivroEntrada,
     LivroSaida,
     LivrosLista,
@@ -68,7 +69,7 @@ def livro_por_id(livro_id: int, session: T_Session): ...
 
 
 @router.put(
-    '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
+    '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroAtualizado
 )
 def atualizar_livro(
     livro_id: int, session: T_Session, usuario_autorizado: T_UsuarioAutorizado
@@ -77,7 +78,7 @@ def atualizar_livro(
 
     if not db_livro:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=HTTPStatus.NOT_FOUND,
             detail='Não encontramos o livro no acervo',
         )
 

@@ -32,11 +32,16 @@ class LivroSaida(BaseModel):
     id: int
     titulo: str
     ano: int
-    romancista_id: int
+    # romancista_id: int # | None = None
 
 
 class LivrosLista(BaseModel):
     livros: list[LivroSaida]
+
+
+class LivroAtualizado(BaseModel):
+    titulo: str
+    ano: int
 
 
 class RomancistaEntrada(BaseModel):
@@ -51,6 +56,10 @@ class RomancistaSaida(BaseModel):
 
 class RomancistasLista(BaseModel):
     romancistas: list[RomancistaSaida]
+
+
+class RomancistaAtualizado(BaseModel):
+    nome: str | None = None
 
 
 class Token(BaseModel):
