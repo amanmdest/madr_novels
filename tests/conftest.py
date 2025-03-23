@@ -1,13 +1,23 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import StaticPool, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from testcontainers.postgres import PostgresContainer
 
 from madr_novels.app import app
 from madr_novels.database import get_session
 from madr_novels.models import table_registry
 from madr_novels.security import senha_hash
 from tests.factories import UsuarioFabrica
+
+
+@pytest.fixture(scope='session')
+def engine():
+    with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+        _engine = create_engine(postgres.get_connection_url())
+
+        with _engine.begin():
+            yield _engine
 
 
 @pytest.fixture
@@ -23,12 +33,7 @@ def cliente(sessao):
 
 
 @pytest.fixture
-def sessao():
-    engine = create_engine(
-        'sqlite:///:memory:',
-        connect_args={'check_same_thread': False},
-        poolclass=StaticPool,
-    )
+def sessao(engine):
     table_registry.metadata.create_all(engine)
 
     with Session(engine) as sessao:
@@ -56,6 +61,7 @@ def outro_usuario(sessao):
     chave = 'potato'
 
     usuario = UsuarioFabrica(senha=senha_hash(chave))
+
     sessao.add(usuario)
     sessao.commit()
     sessao.refresh(usuario)

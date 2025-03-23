@@ -36,6 +36,14 @@ def test_listar_usuarios_com_usuario(cliente, usuario):
     assert response.json() == {'usuarios': [usuario_schema]}
 
 
+def test_get_user_by_id(cliente, token):
+    response = cliente.get(
+        '/usuarios/1', headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+
 # def test_usuario_por_id(cliente, usuario):
 #     response = cliente.get('/usuarios/1')
 #     if 1 == usuario.id:
