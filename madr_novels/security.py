@@ -4,8 +4,12 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jwt import decode, encode  # type: ignore
-from jwt.exceptions import DecodeError, ExpiredSignatureError  # type: ignore
+from jwt import (  # type: ignore
+    DecodeError,
+    ExpiredSignatureError,
+    decode,
+    encode,
+)
 from pwdlib import PasswordHash  # type: ignore
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,7 +22,7 @@ from madr_novels.settings import Settings
 
 T_Session = Annotated[Session, Depends(get_session)]
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/token/')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 pwd_context = PasswordHash.recommended()
 settings = Settings()
 
@@ -47,7 +51,8 @@ def criando_token_de_acesso(data: dict):
 
 
 def pegar_usuario_autorizado(
-    session: T_Session, token: str = Depends(oauth2_scheme)
+    session: T_Session,
+    token: str = Depends(oauth2_scheme),
 ):
     credenciais_invalidas = HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
@@ -65,6 +70,7 @@ def pegar_usuario_autorizado(
         token_data = TokenData(username=username)
     except DecodeError:
         raise credenciais_invalidas
+
     except ExpiredSignatureError:
         raise credenciais_invalidas
 

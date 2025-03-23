@@ -15,14 +15,14 @@ from madr_novels.security import (
     verificar_senha,
 )
 
-router = APIRouter(prefix='/token', tags=['token'])
+router = APIRouter(prefix='/auth', tags=['auth'])
 
 T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 T_Session = Annotated[Session, Depends(get_session)]
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
-@router.post('/', response_model=Token)
+@router.post('/token', response_model=Token)
 def login_acessar_token(
     form_data: T_OAuth2Form,
     session: T_Session,
@@ -37,9 +37,9 @@ def login_acessar_token(
             detail='Email ou senha incorretos',
         )
 
-    token_acesso = criando_token_de_acesso(data={'sub': usuario.email})
+    access_token = criando_token_de_acesso(data={'sub': usuario.email})
 
-    return {'token_acesso': token_acesso, 'token_tipo': 'Bearer'}
+    return {'access_token': access_token, 'token_type': 'Bearer'}
 
 
 @router.post('/refresh_token', response_model=Token)
@@ -48,4 +48,4 @@ def refresh_token(usuario_autorizado: T_UsuarioAutorizado):
         data={'sub': usuario_autorizado.email}
     )
 
-    return {'token_acesso': novo_token, 'token_tipo': 'Bearer'}
+    return {'access_token': novo_token, 'token_type': 'Bearer'}

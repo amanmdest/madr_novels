@@ -40,8 +40,8 @@ class LivrosLista(BaseModel):
 
 
 class LivroAtualizado(BaseModel):
-    titulo: str
-    ano: int
+    titulo: str | None = None
+    ano: int | None = None
 
 
 class RomancistaEntrada(BaseModel):
@@ -63,8 +63,8 @@ class RomancistaAtualizado(BaseModel):
 
 
 class Token(BaseModel):
-    token_acesso: str
-    token_tipo: str
+    access_token: str
+    token_type: str
 
 
 class TokenData(BaseModel):
