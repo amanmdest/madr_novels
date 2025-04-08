@@ -42,14 +42,14 @@ def usuarios(
 @router.get('/{usuario_id}', response_model=UsuarioSaida)
 def usuario_por_id(usuario_id: int, session: T_Session):
     usuario = session.scalar(select(Usuario).where(usuario_id == Usuario.id))
-    # usuario_schema = UsuarioSaida.model_validate(usuario).model_dump()
+
     if not usuario:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Usuario não foi encontrado',
         )
 
-    return {'usuario': [usuario]}
+    return usuario
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
@@ -109,7 +109,6 @@ def atualizar_conta(
     usuario_autorizado.username = usuario.username
     usuario_autorizado.senha = senha_hash(usuario.senha)
 
-    session.add(usuario_autorizado)
     session.commit()
     session.refresh(usuario_autorizado)
 

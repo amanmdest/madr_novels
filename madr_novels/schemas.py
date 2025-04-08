@@ -32,16 +32,18 @@ class LivroSaida(BaseModel):
     id: int
     titulo: str
     ano: int
-    # romancista_id: int # | None = None
+    romancista_id: int
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LivrosLista(BaseModel):
     livros: list[LivroSaida]
 
 
-class LivroAtualizado(BaseModel):
+class LivroAtualiza(BaseModel):
     titulo: str | None = None
     ano: int | None = None
+    romancista_id: int | None = None
 
 
 class RomancistaEntrada(BaseModel):
@@ -52,13 +54,14 @@ class RomancistaSaida(BaseModel):
     id: int
     nome: str
     livros: list[LivroSaida]
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RomancistasLista(BaseModel):
     romancistas: list[RomancistaSaida]
 
 
-class RomancistaAtualizado(BaseModel):
+class RomancistaAtualiza(BaseModel):
     nome: str | None = None
 
 

@@ -9,7 +9,7 @@ from madr_novels.database import get_session
 from madr_novels.models import Romancista, Usuario
 from madr_novels.schemas import (
     FiltroPag,
-    RomancistaAtualizado,
+    RomancistaAtualiza,
     RomancistaEntrada,
     RomancistaSaida,
     RomancistasLista,
@@ -86,7 +86,7 @@ def romancista_por_id(romancista_id: int, session: T_Session):
 )
 def atualizar_romancista(
     romancista_id: int,
-    romancista: RomancistaAtualizado,
+    romancista: RomancistaAtualiza,
     session: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
@@ -102,7 +102,6 @@ def atualizar_romancista(
 
     db_romancista.nome = romancista.nome
 
-    session.add(db_romancista)
     session.commit()
     session.refresh(db_romancista)
 

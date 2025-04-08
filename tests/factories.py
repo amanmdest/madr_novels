@@ -17,6 +17,7 @@ class RomancistaFabrica(factory.Factory):
         model = Romancista
 
     nome = factory.Faker('name')
+    # name = factory.Sequence(lambda n: f'George{n}')
 
 
 class LivroFabrica(factory.Factory):
@@ -25,4 +26,4 @@ class LivroFabrica(factory.Factory):
 
     titulo = factory.Faker('sentence', nb_words=2)
     ano = factory.Faker('year')
-    romancista_id = factory.Sequence(lambda n: n)  # 1
+    romancista_id = 1  # factory.Sequence(lambda n: n)  #

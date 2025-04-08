@@ -1,13 +1,25 @@
 from http import HTTPStatus
 
-from tests.factories import LivroFabrica
-
 
 def test_listar_livros(cliente):
     response = cliente.get('/livros/')
 
     response.status_code == HTTPStatus.OK
     response.json() == {'livros': []}
+
+
+# def test_novo_livro_em_romancista_db_relationship(romancista, session):
+#     livro = LivroFabrica()
+
+#     session.add(livro)
+#     session.commit()
+#     session.refresh(livro)
+
+#     romancista = session.scalar(
+#       select(Romancista).where(Romancista.id == livro.romancista_id)
+#     )
+
+#     assert livro in romancista.livros
 
 
 # def test_listar_livro_por_id(cliente):
@@ -17,30 +29,34 @@ def test_listar_livros(cliente):
 #     response.json() == {'livros': []}
 
 
-def test_novo_livro(cliente, token):
+def test_novo_livro(cliente, romancista, token):
     response = cliente.post(
         '/livros/',
-        json={'titulo': 'Moby Dick', 'ano': 1851, 'romancista_id': 1},
         headers={'Authorization': f'Bearer {token}'},
+        json={
+            'titulo': 'Poesias Reunidas',
+            'ano': 1945,
+            'romancista_id': romancista.id,
+        },
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         'id': 1,
-        'titulo': 'Moby Dick',
-        'ano': 1851,
+        'titulo': 'Poesias Reunidas',
+        'ano': 1945,
+        'romancista_id': 1,
     }
 
 
-def test_livro_ja_cadastrado_no_acervo(cliente, sessao, token):
-    livro = LivroFabrica()
-    sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
-
+def test_livro_ja_cadastrado_no_acervo(cliente, romancista, livro, token):
     response = cliente.post(
         '/livros/',
-        json={'titulo': livro.titulo, 'ano': 1851, 'romancista_id': 1},
+        json={
+            'titulo': livro.titulo,
+            'ano': 1851,
+            'romancista_id': romancista.id,
+        },
         headers={'Authorization': f'Bearer {token}'},
     )
 
@@ -50,45 +66,39 @@ def test_livro_ja_cadastrado_no_acervo(cliente, sessao, token):
     }
 
 
-def test_atualizar_livro(cliente, sessao, token):
-    livro = LivroFabrica()
-    sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
-    response = cliente.put(
+def test_atualizar_livro(cliente, romancista, livro, token):
+    response = cliente.patch(
         f'/livros/{livro.id}',
         json={
-            'titulo': 'As Mulheres de Tijucopapo',
-            'ano': livro.ano,
-            'romancista_id': livro.romancista_id,
+            'titulo': 'Segunda Fundação',
+            'ano': 1942,
+            'romancista_id': romancista.id,
         },
         headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'titulo': livro.titulo,
-        'ano': livro.ano,
+        'id': livro.id,
+        'titulo': 'Segunda Fundação',
+        'ano': 1942,
+        'romancista_id': 1,
     }
 
 
 def test_atualizar_livro_nao_encontrado(cliente, token):
-    response = cliente.put(
+    response = cliente.patch(
         '/livros/10', json={}, headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Não encontramos o livro no acervo'}
+    assert response.json() == {'detail': 'Livro não encontrado no acervo.'}
 
 
-def test_deletar_livro(cliente, sessao, token):
-    livro = LivroFabrica()
-    sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
+def test_deletar_livro(cliente, romancista, livro, token):
     response = cliente.delete(
         f'/livros/{livro.id}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == f'Livro {livro.titulo} deletadao'
+    assert response.json() == {'mensagem': f'Livro {livro.titulo} deletadao'}
