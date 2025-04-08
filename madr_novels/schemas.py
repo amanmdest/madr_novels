@@ -33,7 +33,6 @@ class LivroSaida(BaseModel):
     titulo: str
     ano: int
     romancista_id: int
-    model_config = ConfigDict(from_attributes=True)
 
 
 class LivrosLista(BaseModel):
@@ -54,7 +53,6 @@ class RomancistaSaida(BaseModel):
     id: int
     nome: str
     livros: list[LivroSaida]
-    model_config = ConfigDict(from_attributes=True)
 
 
 class RomancistasLista(BaseModel):
