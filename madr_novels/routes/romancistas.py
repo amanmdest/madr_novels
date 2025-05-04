@@ -97,7 +97,7 @@ def atualizar_romancista(
     if not db_romancista:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Não encontramos o romancista no acervo',
+            detail='Romancista não encontrado no acervo.',
         )
 
     db_romancista.nome = romancista.nome

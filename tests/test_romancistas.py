@@ -75,11 +75,11 @@ def test_atualizar_romancista(cliente, sessao, token):
     }
 
 
-def test_atualizar_romancista_nao_encontrado(cliente, sessao, token):
-    romancista = RomancistaFabrica()
-    sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+def test_atualizar_romancista_nao_encontrado(cliente, token):
+    # romancista = RomancistaFabrica()
+    # sessao.add(romancista)
+    # sessao.commit()
+    # sessao.refresh(romancista)
     response = cliente.put(
         '/romancistas/10',
         json={},
@@ -88,7 +88,7 @@ def test_atualizar_romancista_nao_encontrado(cliente, sessao, token):
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {
-        'detail': 'Não encontramos o romancista no acervo'
+        'detail': 'Romancista não encontrado no acervo.'
     }
 
 

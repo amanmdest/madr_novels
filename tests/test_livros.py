@@ -43,7 +43,7 @@ def test_novo_livro(cliente, romancista, token):
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         'id': 1,
-        'titulo': 'Poesias Reunidas',
+        'titulo': 'poesias reunidas',
         'ano': 1945,
         'romancista_id': 1,
     }
@@ -80,7 +80,7 @@ def test_atualizar_livro(cliente, romancista, livro, token):
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'id': livro.id,
-        'titulo': 'Segunda Fundação',
+        'titulo': 'segunda fundação',
         'ano': 1942,
         'romancista_id': 1,
     }
@@ -88,7 +88,9 @@ def test_atualizar_livro(cliente, romancista, livro, token):
 
 def test_atualizar_livro_nao_encontrado(cliente, token):
     response = cliente.patch(
-        '/livros/10', json={}, headers={'Authorization': f'Bearer {token}'}
+        '/livros/10',
+        json={'titulo': 'Segunda Fundação', 'ano': 1942, 'romancista_id': 1},
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -102,3 +104,12 @@ def test_deletar_livro(cliente, romancista, livro, token):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'mensagem': f'Livro {livro.titulo} deletadao'}
+
+
+def test_deletar_livro_nao_encontrado(cliente, romancista, livro, token):
+    response = cliente.delete(
+        '/livros/10', headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Livro não encontrado no acervo.'}

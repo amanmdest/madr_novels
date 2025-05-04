@@ -84,7 +84,7 @@ def romancista(sessao):
 
 @pytest.fixture
 def livro(sessao):
-    livro = Livro(titulo='O Rei da Vela', ano='1933', romancista_id=1)
+    livro = Livro(titulo='o rei da vela', ano='1933', romancista_id=1)
 
     sessao.add(livro)
     sessao.commit()

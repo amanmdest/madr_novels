@@ -16,6 +16,7 @@ from madr_novels.schemas import (
     Mensagem,
 )
 from madr_novels.security import pegar_usuario_autorizado
+from madr_novels.utils.sanitizador import sanitiza
 
 router = APIRouter(prefix='/livros', tags=['livros'])
 
@@ -35,7 +36,7 @@ def novo_livro(
     usuario_autorizado: T_UsuarioAutorizado,
 ):
     db_livro = session.scalar(
-        select(Livro).where(Livro.titulo == livro.titulo)
+        select(Livro).where(Livro.titulo == sanitiza(livro.titulo))
     )
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.id == livro.romancista_id)
@@ -54,7 +55,9 @@ def novo_livro(
         )
 
     livro = Livro(
-        titulo=livro.titulo, ano=livro.ano, romancista_id=livro.romancista_id
+        titulo=sanitiza(livro.titulo),
+        ano=livro.ano,
+        romancista_id=livro.romancista_id,
     )
 
     session.add(livro)
@@ -87,11 +90,11 @@ def atualizar_livro(
     session: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_livro_title = session.scalar(
-        select(Livro).where(Livro.titulo == livro.titulo)
-    )
-
     db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
+
+    db_livro_title = session.scalar(
+        select(Livro).where(Livro.titulo == sanitiza(livro.titulo))
+    )
 
     db_romancista = session.scalar(
         select(Romancista).where(Romancista.id == livro.romancista_id)
@@ -112,13 +115,13 @@ def atualizar_livro(
     if not db_romancista:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Romancista não existe no acervo.',
+            detail='Romancista não encontrado no acervo.',
         )
 
+    if livro.titulo:
+        db_livro.titulo = sanitiza(livro.titulo)
     if livro.ano:
         db_livro.ano = livro.ano
-    if livro.titulo:
-        db_livro.titulo = livro.titulo
     if livro.romancista_id:
         db_livro.romancista_id = livro.romancista_id
 
@@ -137,7 +140,7 @@ def deletar_livro(
     if not db_livro:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Não encontramos o livro no acervo',
+            detail='Livro não encontrado no acervo.',
         )
 
     session.delete(db_livro)

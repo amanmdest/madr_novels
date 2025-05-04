@@ -6,7 +6,8 @@ migrations
 notes.txt
 faker_tests.py
 .python-version
-madr_novels/utils
+madr_novels/utils/utils.py
+studies
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
