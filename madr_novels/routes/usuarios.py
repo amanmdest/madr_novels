@@ -2,7 +2,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
@@ -18,6 +18,7 @@ from madr_novels.security import (
     pegar_usuario_autorizado,
     senha_hash,
 )
+from madr_novels.utils import verifica_usuario_existe
 
 router = APIRouter(prefix='/usuarios', tags=['usuarios'])
 
@@ -54,27 +55,16 @@ def usuario_por_id(usuario_id: int, session: T_Session):
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
 def criar_conta(usuario: UsuarioEntrada, session: T_Session):
-    db_usuario = session.scalar(
-        select(Usuario).where(
-            or_(
-                Usuario.username == usuario.username,
-                Usuario.email == usuario.email,
-            )
-        )
-    )
+    # if (
+    #     usuario.username
+    #     != sanitiza_string(usuario.username) or usuario.email
+    #     != sanitiza_string(usuario.email)
+    # ):
+    #     raise HTTPException(
+    #         status_code=HTTPStatus.BAD_REQUEST, detail='Melhorar formatação'
+    #     ) # TODO
 
-    if db_usuario:
-        if db_usuario.username == usuario.username:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail='Username já existe',
-            )
-        elif db_usuario.email == usuario.email:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail='Email já está sendo utilizado',
-            )
-
+    verifica_usuario_existe(session, usuario)
     hash_senha = senha_hash(usuario.senha)
 
     db_usuario = Usuario(

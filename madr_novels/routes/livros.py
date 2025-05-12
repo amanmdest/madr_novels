@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from madr_novels.database import get_session
-from madr_novels.models import Livro, Romancista, Usuario
+from madr_novels.models import Livro, Usuario
 from madr_novels.schemas import (
     FiltroPag,
     LivroAtualiza,
@@ -16,7 +16,11 @@ from madr_novels.schemas import (
     Mensagem,
 )
 from madr_novels.security import pegar_usuario_autorizado
-from madr_novels.utils.sanitizador import sanitiza
+from madr_novels.utils import (
+    sanitiza_string,
+    verifica_livro_existe_em_romancista,
+    verifica_romancista_id_existe,
+)
 
 router = APIRouter(prefix='/livros', tags=['livros'])
 
@@ -35,27 +39,21 @@ def novo_livro(
     session: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_livro = session.scalar(
-        select(Livro).where(Livro.titulo == sanitiza(livro.titulo))
-    )
-    db_romancista = session.scalar(
-        select(Romancista).where(Romancista.id == livro.romancista_id)
-    )
+    verifica_livro_existe_em_romancista(session, livro)
+    verifica_romancista_id_existe(session, livro)
 
-    if not db_romancista:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Romancista não existe no acervo.',
-        )
-
-    if db_livro:
+    if (
+        not sanitiza_string(livro.titulo)
+        or not livro.ano
+        or not livro.romancista_id
+    ):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            detail='Livro já cadastrado no acervo bb! ;D',
+            detail='É preciso preencher todos os campos',
         )
 
     livro = Livro(
-        titulo=sanitiza(livro.titulo),
+        titulo=sanitiza_string(livro.titulo),
         ano=livro.ano,
         romancista_id=livro.romancista_id,
     )
@@ -92,34 +90,16 @@ def atualizar_livro(
 ):
     db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
 
-    db_livro_title = session.scalar(
-        select(Livro).where(Livro.titulo == sanitiza(livro.titulo))
-    )
-
-    db_romancista = session.scalar(
-        select(Romancista).where(Romancista.id == livro.romancista_id)
-    )
-
-    if db_livro_title:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='Livro já cadastrado no acervo bb! ;D',
-        )
-
     if not db_livro:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Livro não encontrado no acervo.',
+            detail='Livro não encontrado no acervo',
         )
 
-    if not db_romancista:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Romancista não encontrado no acervo.',
-        )
+    verifica_romancista_id_existe(session, livro)
 
     if livro.titulo:
-        db_livro.titulo = sanitiza(livro.titulo)
+        db_livro.titulo = sanitiza_string(livro.titulo)
     if livro.ano:
         db_livro.ano = livro.ano
     if livro.romancista_id:
@@ -140,7 +120,7 @@ def deletar_livro(
     if not db_livro:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Livro não encontrado no acervo.',
+            detail='Livro não encontrado no acervo',
         )
 
     session.delete(db_livro)

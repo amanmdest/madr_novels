@@ -87,9 +87,7 @@ def test_atualizar_romancista_nao_encontrado(cliente, token):
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {
-        'detail': 'Romancista não encontrado no acervo.'
-    }
+    assert response.json() == {'detail': 'Romancista não encontrado no acervo'}
 
 
 def test_deletar_romancista(cliente, sessao, token):

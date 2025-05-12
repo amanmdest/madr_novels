@@ -65,7 +65,7 @@ def test_criar_conta_username_repetido(cliente, usuario):
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
-    assert response.json() == {'detail': 'Username já existe'}
+    assert response.json() == {'detail': 'Nome de usuário indisponível'}
 
 
 def test_criar_conta_email_repetido(cliente, usuario):
