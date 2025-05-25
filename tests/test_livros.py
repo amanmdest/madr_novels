@@ -1,32 +1,6 @@
 from http import HTTPStatus
 
-
-def test_listar_livros(cliente):
-    response = cliente.get('/livros/')
-
-    response.status_code == HTTPStatus.OK
-    response.json() == {'livros': []}
-
-
-# def test_novo_livro_em_romancista_db_relationship(romancista, session):
-#     livro = LivroFabrica()
-
-#     session.add(livro)
-#     session.commit()
-#     session.refresh(livro)
-
-#     romancista = session.scalar(
-#       select(Romancista).where(Romancista.id == livro.romancista_id)
-#     )
-
-#     assert livro in romancista.livros
-
-
-# def test_listar_livro_por_id(cliente):
-#     response = cliente.get('/livros/{livro.id}')
-#
-#     response.status_code == HTTPStatus.OK
-#     response.json() == {'livros': []}
+from madr_novels.schemas import LivroSaida
 
 
 def test_novo_livro(cliente, romancista, token):
@@ -49,6 +23,21 @@ def test_novo_livro(cliente, romancista, token):
     }
 
 
+def test_novo_livro_campos_nao_preenchidos(cliente, romancista, token):
+    response = cliente.post(
+        '/livros/',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'titulo': '',
+            'ano': 1945,
+            'romancista_id': romancista.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'É preciso preencher todos os campos'}
+
+
 def test_livro_ja_cadastrado_no_acervo(cliente, romancista, livro, token):
     response = cliente.post(
         '/livros/',
@@ -64,6 +53,29 @@ def test_livro_ja_cadastrado_no_acervo(cliente, romancista, livro, token):
     assert response.json() == {
         'detail': 'Livro já cadastrado no acervo bb! ;D'
     }
+
+
+def test_listar_livros(cliente):
+    response = cliente.get('/livros/')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'livros': []}
+
+
+def test_id_retornar_livro(cliente, livro):
+    response = cliente.get('/livros/1')
+
+    livro_schema = LivroSaida.model_validate(livro).model_dump()
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == livro_schema
+
+
+def test_id_retornar_livro_nao_encontrado(cliente):
+    response = cliente.get('/livros/1')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Livro não encontrado no acervo'}
 
 
 def test_atualizar_livro(cliente, romancista, livro, token):

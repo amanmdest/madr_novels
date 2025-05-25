@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from tests.factories import RomancistaFabrica
+from madr_novels.schemas import RomancistaSaida
 
 
 def test_novo_romancista(cliente, token):
@@ -18,11 +18,7 @@ def test_novo_romancista(cliente, token):
     }
 
 
-def test_romancista_ja_cadastrado_no_acervo(cliente, sessao, token):
-    romancista = RomancistaFabrica()
-    sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+def test_romancista_ja_cadastrado_no_acervo(cliente, token, romancista):
     response = cliente.post(
         '/romancistas/',
         json={'nome': romancista.nome},
@@ -42,25 +38,23 @@ def test_listar_romancistas(cliente):
     assert response.json() == {'romancistas': []}
 
 
-# def test_romancista_por_id(cliente, romancista):
-#     response = cliente.get(f'/romancistas/{romancista.id}')
-#
-#     assert response.status_code == HTTPStatus.OK
-#     assert response.json() == {'romancista': romancista}
+def test_id_retornar_romancista(cliente, romancista):
+    response = cliente.get('/romancistas/1')
+
+    romancista_schema = RomancistaSaida.model_validate(romancista).model_dump()
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == romancista_schema
 
 
-# def test_romancista_por_id_errado(cliente):
-#     response = cliente.get('/romancistas/666')
-#
-#     assert response.status_code == HTTPStatus.OK
-#     assert response.json() == {'romancista': romancista}
+def test_id_retornar_romancista_nao_encontrado(cliente):
+    response = cliente.get('/romancistas/1')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Romancista não encontrado no acervo'}
 
 
-def test_atualizar_romancista(cliente, sessao, token):
-    romancista = RomancistaFabrica()
-    sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+def test_atualizar_romancista(cliente, token, romancista):
     response = cliente.put(
         f'/romancistas/{romancista.id}',
         json={'nome': 'Clarice Lispector'},
@@ -76,10 +70,6 @@ def test_atualizar_romancista(cliente, sessao, token):
 
 
 def test_atualizar_romancista_nao_encontrado(cliente, token):
-    # romancista = RomancistaFabrica()
-    # sessao.add(romancista)
-    # sessao.commit()
-    # sessao.refresh(romancista)
     response = cliente.put(
         '/romancistas/10',
         json={},
@@ -90,15 +80,21 @@ def test_atualizar_romancista_nao_encontrado(cliente, token):
     assert response.json() == {'detail': 'Romancista não encontrado no acervo'}
 
 
-def test_deletar_romancista(cliente, sessao, token):
-    romancista = RomancistaFabrica()
-    sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+def test_deletar_romancista(cliente, romancista, token):
     response = cliente.delete(
         f'/romancistas/{romancista.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == f'Romancista {romancista.nome} deletadao'
+    assert response.json() == f'Romancista {romancista.nome} deletado'
+
+
+def test_deletar_romancista_nao_encontrado(cliente, token):
+    response = cliente.delete(
+        '/romancistas/10',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': '10 não encontrado no acervo'}

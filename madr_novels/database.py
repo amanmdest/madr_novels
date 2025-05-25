@@ -7,5 +7,5 @@ engine = create_engine(Settings().DATABASE_URL)
 
 
 def get_session():  # pragma: no cover
-    with Session(engine) as session:
-        yield session
+    with Session(engine) as sessao:
+        yield sessao

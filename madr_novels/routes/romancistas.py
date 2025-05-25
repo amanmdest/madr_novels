@@ -30,10 +30,10 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 )
 def novo_romancista(
     romancista: RomancistaEntrada,
-    session: T_Session,
+    sessao: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = session.scalar(
+    db_romancista = sessao.scalar(
         select(Romancista).where(Romancista.nome == romancista.nome)
     )
 
@@ -45,16 +45,16 @@ def novo_romancista(
 
     romancista = Romancista(nome=romancista.nome)
 
-    session.add(romancista)
-    session.commit()
-    session.refresh(romancista)
+    sessao.add(romancista)
+    sessao.commit()
+    sessao.refresh(romancista)
 
     return romancista
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=RomancistasLista)
-def romancistas(filtro_pag: T_FiltroPag, session: T_Session):
-    romancistas = session.scalars(
+def romancistas(filtro_pag: T_FiltroPag, sessao: T_Session):
+    romancistas = sessao.scalars(
         select(Romancista).limit(filtro_pag.limit).offset(filtro_pag.offset)
     )
     return {'romancistas': romancistas}
@@ -65,18 +65,18 @@ def romancistas(filtro_pag: T_FiltroPag, session: T_Session):
     status_code=HTTPStatus.OK,
     response_model=RomancistaSaida,
 )
-def romancista_por_id(romancista_id: int, session: T_Session):
-    db_romancista = session.scalar(
+def romancista_por_id(romancista_id: int, sessao: T_Session):
+    db_romancista = sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
     if not db_romancista:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='boogarins are you crazy?'
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Romancista não encontrado no acervo',
         )
 
-    else:
-        return {'romancista': db_romancista}
+    return db_romancista
 
 
 @router.put(
@@ -87,10 +87,10 @@ def romancista_por_id(romancista_id: int, session: T_Session):
 def atualizar_romancista(
     romancista_id: int,
     romancista: RomancistaAtualiza,
-    session: T_Session,
+    sessao: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = session.scalar(
+    db_romancista = sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
@@ -102,8 +102,8 @@ def atualizar_romancista(
 
     db_romancista.nome = romancista.nome
 
-    session.commit()
-    session.refresh(db_romancista)
+    sessao.commit()
+    sessao.refresh(db_romancista)
 
     return db_romancista
 
@@ -111,20 +111,20 @@ def atualizar_romancista(
 @router.delete('/{romancista_id}', status_code=HTTPStatus.OK)
 def deletar_romancista(
     romancista_id: int,
-    session: T_Session,
+    sessao: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = session.scalar(
+    db_romancista = sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
     if not db_romancista:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail=f'{romancista_id} não foi encontrado no acervo',
+            detail=f'{romancista_id} não encontrado no acervo',
         )
 
-    session.delete(db_romancista)
-    session.commit()  # TODO: author will be deleted with books ?
+    sessao.delete(db_romancista)
+    sessao.commit()  # TODO: author will be deleted with it's books ?
 
-    return f'Romancista {db_romancista.nome} deletadao'
+    return f'Romancista {db_romancista.nome} deletado'

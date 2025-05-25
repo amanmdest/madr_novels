@@ -30,9 +30,9 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 @router.get('/', response_model=UsuarioLista)
 def usuarios(
     filtro_usuarios: T_FiltroPag,
-    session: T_Session,
+    sessao: T_Session,
 ):
-    usuarios = session.scalars(
+    usuarios = sessao.scalars(
         select(Usuario)
         .limit(filtro_usuarios.limit)
         .offset(filtro_usuarios.offset)
@@ -40,21 +40,23 @@ def usuarios(
     return {'usuarios': usuarios}
 
 
-@router.get('/{usuario_id}', response_model=UsuarioSaida)
-def usuario_por_id(usuario_id: int, session: T_Session):
-    usuario = session.scalar(select(Usuario).where(usuario_id == Usuario.id))
+@router.get(
+    '/{usuario_id}', status_code=HTTPStatus.OK, response_model=UsuarioSaida
+)
+def usuario_por_id(usuario_id: int, sessao: T_Session):
+    usuario = sessao.scalar(select(Usuario).where(usuario_id == Usuario.id))
 
     if not usuario:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Usuario não foi encontrado',
+            detail='Usuário não encontrado',
         )
 
     return usuario
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UsuarioSaida)
-def criar_conta(usuario: UsuarioEntrada, session: T_Session):
+def criar_conta(usuario: UsuarioEntrada, sessao: T_Session):
     # if (
     #     usuario.username
     #     != sanitiza_string(usuario.username) or usuario.email
@@ -64,7 +66,7 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
     #         status_code=HTTPStatus.BAD_REQUEST, detail='Melhorar formatação'
     #     ) # TODO
 
-    verifica_usuario_existe(session, usuario)
+    verifica_usuario_existe(sessao, usuario)
     hash_senha = senha_hash(usuario.senha)
 
     db_usuario = Usuario(
@@ -73,9 +75,9 @@ def criar_conta(usuario: UsuarioEntrada, session: T_Session):
         senha=hash_senha,
     )
 
-    session.add(db_usuario)
-    session.commit()
-    session.refresh(db_usuario)
+    sessao.add(db_usuario)
+    sessao.commit()
+    sessao.refresh(db_usuario)
 
     return db_usuario
 
@@ -87,7 +89,7 @@ def atualizar_conta(
     usuario: UsuarioEntrada,
     usuario_autorizado: T_UsuarioAutorizado,
     usuario_id: int,
-    session: T_Session,
+    sessao: T_Session,
 ):
     if usuario_autorizado.id != usuario_id:
         raise HTTPException(
@@ -99,8 +101,8 @@ def atualizar_conta(
     usuario_autorizado.username = usuario.username
     usuario_autorizado.senha = senha_hash(usuario.senha)
 
-    session.commit()
-    session.refresh(usuario_autorizado)
+    sessao.commit()
+    sessao.refresh(usuario_autorizado)
 
     return usuario_autorizado
 
@@ -111,7 +113,7 @@ def atualizar_conta(
 def deletar_conta(
     usuario_autorizado: T_UsuarioAutorizado,
     usuario_id: int,
-    session: T_Session,
+    sessao: T_Session,
 ):
     if usuario_autorizado.id != usuario_id:
         raise HTTPException(
@@ -119,7 +121,7 @@ def deletar_conta(
             detail='Você não possui as permissões esperadas pela aplicação',
         )
 
-    session.delete(usuario_autorizado)
-    session.commit()
+    sessao.delete(usuario_autorizado)
+    sessao.commit()
 
     return {'mensagem': f'Usuário {usuario_autorizado.username} virou saudade'}

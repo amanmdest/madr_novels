@@ -51,7 +51,7 @@ def criando_token_de_acesso(data: dict):
 
 
 def pegar_usuario_autorizado(
-    session: T_Session,
+    sessao: T_Session,
     token: str = Depends(oauth2_scheme),
 ):
     credenciais_invalidas = HTTPException(
@@ -74,7 +74,7 @@ def pegar_usuario_autorizado(
     except ExpiredSignatureError:
         raise credenciais_invalidas
 
-    usuario = session.scalar(
+    usuario = sessao.scalar(
         select(Usuario).where(Usuario.email == token_data.username)
     )
 

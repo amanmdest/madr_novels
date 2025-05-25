@@ -8,7 +8,7 @@ from madr_novels.app import app
 from madr_novels.database import get_session
 from madr_novels.models import Livro, Romancista, table_registry
 from madr_novels.security import senha_hash
-from tests.factories import UsuarioFabrica
+from tests.fabricas import UsuarioFabrica
 
 
 @pytest.fixture(scope='session')

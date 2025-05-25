@@ -1,5 +1,8 @@
 from http import HTTPStatus
 
+from sqlalchemy import select
+
+from madr_novels.models import Usuario
 from madr_novels.schemas import UsuarioSaida
 
 
@@ -36,22 +39,21 @@ def test_listar_usuarios_com_usuario(cliente, usuario):
     assert response.json() == {'usuarios': [usuario_schema]}
 
 
-def test_get_user_by_id(cliente, token):
-    response = cliente.get(
-        '/usuarios/1', headers={'Authorization': f'Bearer {token}'}
-    )
+def test_id_retornar_usuario(cliente, sessao, usuario):
+    response = cliente.get('/usuarios/1')
+
+    usuario = sessao.scalar(select(Usuario).where(Usuario.id == 1))
+    usuario_schema = UsuarioSaida.model_validate(usuario).model_dump()
 
     assert response.status_code == HTTPStatus.OK
+    assert response.json() == usuario_schema
 
 
-# def test_usuario_por_id(cliente, usuario):
-#     response = cliente.get('/usuarios/1')
-#     if 1 == usuario.id:
-#         usuario_db = usuario
-#
-#     # usuario_schema = UsuarioSaida.model_validate(usuario_db).model_dump()
-#
-#     assert response.json() == {'usuario': [usuario_db]}
+def test_id_retornar_usuario_nao_encontrado(cliente, sessao):
+    response = cliente.get('/usuarios/1')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Usuário não encontrado'}
 
 
 def test_criar_conta_username_repetido(cliente, usuario):

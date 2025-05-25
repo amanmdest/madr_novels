@@ -25,9 +25,9 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 @router.post('/token', response_model=Token)
 def login_acessar_token(
     form_data: T_OAuth2Form,
-    session: T_Session,
+    sessao: T_Session,
 ):
-    usuario = session.scalar(
+    usuario = sessao.scalar(
         select(Usuario).where(Usuario.email == form_data.username)
     )
 

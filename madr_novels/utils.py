@@ -15,15 +15,11 @@ def sanitiza_string(string):
     return ' '.join(sanitizado.split())
 
 
-def verifica_usuario_existe(session, usuario):
-    db_usuario = session.scalar(
+def verifica_usuario_existe(sessao, usuario):
+    db_usuario = sessao.scalar(
         select(Usuario).where(
             (Usuario.username == usuario.username)
             | (Usuario.email == usuario.email)
-            # or_(
-            #     Usuario.username == usuario.username,
-            #     Usuario.email == usuario.email,
-            # )
         )
     )
     if db_usuario:
@@ -39,8 +35,8 @@ def verifica_usuario_existe(session, usuario):
             )
 
 
-def verifica_livro_existe_em_romancista(session, livro):
-    db_livro = session.scalar(
+def verifica_livro_existe_em_romancista(sessao, livro):
+    db_livro = sessao.scalar(
         select(Livro).where(
             (Livro.titulo == sanitiza_string(livro.titulo))
             & (Livro.romancista_id == (livro.romancista_id))
@@ -53,8 +49,8 @@ def verifica_livro_existe_em_romancista(session, livro):
         )
 
 
-def verifica_romancista_id_existe(session, livro):
-    db_romancista = session.scalar(
+def verifica_romancista_id_existe(sessao, livro):
+    db_romancista = sessao.scalar(
         select(Romancista).where((Romancista.id == livro.romancista_id))
     )
     if not db_romancista:

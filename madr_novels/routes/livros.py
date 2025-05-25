@@ -36,11 +36,11 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 )
 def novo_livro(
     livro: LivroEntrada,
-    session: T_Session,
+    sessao: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    verifica_livro_existe_em_romancista(session, livro)
-    verifica_romancista_id_existe(session, livro)
+    verifica_livro_existe_em_romancista(sessao, livro)
+    verifica_romancista_id_existe(sessao, livro)
 
     if (
         not sanitiza_string(livro.titulo)
@@ -58,16 +58,16 @@ def novo_livro(
         romancista_id=livro.romancista_id,
     )
 
-    session.add(livro)
-    session.commit()
-    session.refresh(livro)
+    sessao.add(livro)
+    sessao.commit()
+    sessao.refresh(livro)
 
     return livro
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=LivrosLista)
-def livros(filtro_pag: T_FiltroPag, session: T_Session):
-    livros = session.scalars(
+def livros(filtro_pag: T_FiltroPag, sessao: T_Session):
+    livros = sessao.scalars(
         select(Livro).limit(filtro_pag.limit).offset(filtro_pag.offset)
     )
     return {'livros': livros}
@@ -76,7 +76,16 @@ def livros(filtro_pag: T_FiltroPag, session: T_Session):
 @router.get(
     '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
 )
-def livro_por_id(livro_id: int, session: T_Session): ...
+def livro_por_id(livro_id: int, sessao: T_Session):
+    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
+
+    if not db_livro:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Livro não encontrado no acervo',
+        )
+
+    return db_livro
 
 
 @router.patch(
@@ -85,10 +94,10 @@ def livro_por_id(livro_id: int, session: T_Session): ...
 def atualizar_livro(
     livro_id: int,
     livro: LivroAtualiza,
-    session: T_Session,
+    sessao: T_Session,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
+    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
         raise HTTPException(
@@ -96,7 +105,7 @@ def atualizar_livro(
             detail='Livro não encontrado no acervo',
         )
 
-    verifica_romancista_id_existe(session, livro)
+    verifica_romancista_id_existe(sessao, livro)
 
     if livro.titulo:
         db_livro.titulo = sanitiza_string(livro.titulo)
@@ -105,17 +114,17 @@ def atualizar_livro(
     if livro.romancista_id:
         db_livro.romancista_id = livro.romancista_id
 
-    session.commit()
-    session.refresh(db_livro)
+    sessao.commit()
+    sessao.refresh(db_livro)
 
     return db_livro
 
 
 @router.delete('/{livro_id}', response_model=Mensagem)
 def deletar_livro(
-    livro_id: int, session: T_Session, usuario_autorizado: T_UsuarioAutorizado
+    livro_id: int, sessao: T_Session, usuario_autorizado: T_UsuarioAutorizado
 ):
-    db_livro = session.scalar(select(Livro).where(Livro.id == livro_id))
+    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
         raise HTTPException(
@@ -123,7 +132,7 @@ def deletar_livro(
             detail='Livro não encontrado no acervo',
         )
 
-    session.delete(db_livro)
-    session.commit()
+    sessao.delete(db_livro)
+    sessao.commit()
 
     return {'mensagem': f'Livro {db_livro.titulo} deletadao'}

@@ -1,9 +1,15 @@
 from http import HTTPStatus
 
-from jwt import decode  # type: ignore
+import jwt
+import pytest  # type: ignore
+from fastapi import HTTPException
+from jwt import decode
 
-from madr_novels.security import criando_token_de_acesso
-from madr_novels.settings import Settings
+from madr_novels.security import (
+    criando_token_de_acesso,
+    pegar_usuario_autorizado,
+    settings,
+)
 
 
 def test_jwt():
@@ -11,7 +17,9 @@ def test_jwt():
     token = criando_token_de_acesso(dados)
 
     decodificado = decode(
-        token, Settings().SECRET_KEY, algorithms=[Settings().ALGORITHM]
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
     )
 
     assert decodificado['sub'] == dados['sub']
@@ -25,3 +33,26 @@ def test_jwt_token_invalido(cliente):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {'detail': 'Erro de validação de credenciais'}
+
+
+def test_pegar_usuario_sem_sub(sessao):
+    token = criando_token_de_acesso(data={'test': 'test'})
+    with pytest.raises(HTTPException) as exc:
+        pegar_usuario_autorizado(sessao=sessao, token=token)
+
+    assert exc.value.status_code == HTTPStatus.UNAUTHORIZED
+    assert exc.value.detail == 'Erro de validação de credenciais'
+
+
+def test_user_nao_encontrado_no_bd(sessao):
+    token = jwt.encode(
+        {'sub': 'JurassicPark'},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+    with pytest.raises(HTTPException) as excinfo:
+        pegar_usuario_autorizado(sessao=sessao, token=token)
+
+    assert excinfo.value.status_code == HTTPStatus.UNAUTHORIZED
+    assert excinfo.value.detail == 'Erro de validação de credenciais'
