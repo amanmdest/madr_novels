@@ -10,16 +10,16 @@ def test_criar_conta(cliente):
     response = cliente.post(
         '/usuarios/',
         json={
-            'username': 'jusant',
-            'email': 'hermoso@juego.com',
-            'senha': 'jusant',
+            'username': 'manzi',
+            'email': 'manzi@mail.com',
+            'senha': 'manzi',
         },
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
-        'username': 'jusant',
-        'email': 'hermoso@juego.com',
+        'username': 'manzi',
+        'email': 'manzi@mail.com',
         'id': 1,
     }
 

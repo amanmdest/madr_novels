@@ -27,7 +27,9 @@ def test_paginacao_deve_retornar_dois_romancistas(cliente, sessao, token):
     assert len(response.json()['romancistas']) == romancistas_esperados
 
 
-def test_paginacao_deve_retornar_cinco_livros(cliente, sessao, token):
+def test_paginacao_deve_retornar_cinco_livros(
+        cliente, romancista, sessao, token
+):
     livros_esperados = 5
     sessao.bulk_save_objects(LivroFabrica.create_batch(5))
     sessao.commit()
@@ -40,7 +42,9 @@ def test_paginacao_deve_retornar_cinco_livros(cliente, sessao, token):
     assert len(response.json()['livros']) == livros_esperados
 
 
-def test_paginacao_deve_retornar_dois_livros(cliente, sessao, token):
+def test_paginacao_deve_retornar_dois_livros(
+        cliente, romancista, sessao, token
+):
     livros_esperados = 2
     sessao.bulk_save_objects(LivroFabrica.create_batch(5))
     sessao.commit()
