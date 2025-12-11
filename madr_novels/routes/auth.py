@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from madr_novels.database import get_session
 from madr_novels.models import Usuario
@@ -18,16 +18,16 @@ from madr_novels.security import (
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
-T_Session = Annotated[Session, Depends(get_session)]
+T_Sessao = Annotated[AsyncSession, Depends(get_session)]
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
 @router.post('/token', response_model=Token)
-def login_acessar_token(
+async def login_acessar_token(
     form_data: T_OAuth2Form,
-    sessao: T_Session,
+    sessao: T_Sessao,
 ):
-    usuario = sessao.scalar(
+    usuario = await sessao.scalar(
         select(Usuario).where(Usuario.email == form_data.username)
     )
 

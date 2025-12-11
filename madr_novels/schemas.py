@@ -40,7 +40,7 @@ class LivrosLista(BaseModel):
     livros: list[LivroSaida]
 
 
-class LivroAtualiza(BaseModel):
+class LivroAtualizado(BaseModel):
     titulo: str | None = None
     ano: int | None = None
     romancista_id: int | None = None
@@ -54,24 +54,20 @@ class RomancistaSaida(BaseModel):
     id: int
     nome: str
     livros: list[LivroSaida]
-    model_config = ConfigDict(from_attributes=True)
+    # model_config = ConfigDict(from_attributes=True)
 
 
 class RomancistasLista(BaseModel):
     romancistas: list[RomancistaSaida]
 
 
-class RomancistaAtualiza(BaseModel):
+class RomancistaAtualizado(BaseModel):
     nome: str | None = None
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
-class TokenData(BaseModel):
-    username: str | None = None
 
 
 class FiltroPag(BaseModel):

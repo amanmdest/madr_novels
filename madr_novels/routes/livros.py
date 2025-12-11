@@ -3,13 +3,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from madr_novels.database import get_session
 from madr_novels.models import Livro, Usuario
 from madr_novels.schemas import (
     FiltroPag,
-    LivroAtualiza,
+    LivroAtualizado,
     LivroEntrada,
     LivroSaida,
     LivrosLista,
@@ -25,7 +25,7 @@ from madr_novels.utils import (
 router = APIRouter(prefix='/livros', tags=['livros'])
 
 T_FiltroPag = Annotated[FiltroPag, Query()]
-T_Session = Annotated[Session, Depends(get_session)]
+T_Sessao = Annotated[AsyncSession, Depends(get_session)]
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
@@ -34,13 +34,13 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
     status_code=HTTPStatus.CREATED,
     response_model=LivroSaida,
 )
-def novo_livro(
+async def novo_livro(
     livro: LivroEntrada,
-    sessao: T_Session,
+    sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    verifica_livro_existe_em_romancista(sessao, livro)
-    verifica_romancista_id_existe(sessao, livro)
+    await verifica_livro_existe_em_romancista(sessao, livro)
+    await verifica_romancista_id_existe(sessao, livro)
 
     if (
         not sanitiza_string(livro.titulo)
@@ -59,15 +59,15 @@ def novo_livro(
     )
 
     sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
+    await sessao.commit()
+    await sessao.refresh(livro)
 
     return livro
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=LivrosLista)
-def livros(filtro_pag: T_FiltroPag, sessao: T_Session):
-    livros = sessao.scalars(
+async def livros(filtro_pag: T_FiltroPag, sessao: T_Sessao):
+    livros = await sessao.scalars(
         select(Livro).limit(filtro_pag.limit).offset(filtro_pag.offset)
     )
     return {'livros': livros}
@@ -76,8 +76,8 @@ def livros(filtro_pag: T_FiltroPag, sessao: T_Session):
 @router.get(
     '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
 )
-def livro_por_id(livro_id: int, sessao: T_Session):
-    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
+async def livro_por_id(livro_id: int, sessao: T_Sessao):
+    db_livro = await sessao.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
         raise HTTPException(
@@ -91,13 +91,13 @@ def livro_por_id(livro_id: int, sessao: T_Session):
 @router.patch(
     '/{livro_id}', status_code=HTTPStatus.OK, response_model=LivroSaida
 )
-def atualizar_livro(
+async def atualizar_livro(
     livro_id: int,
-    livro: LivroAtualiza,
-    sessao: T_Session,
+    livro: LivroAtualizado,
+    sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
+    db_livro = await sessao.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
         raise HTTPException(
@@ -105,7 +105,7 @@ def atualizar_livro(
             detail='Livro não encontrado no acervo',
         )
 
-    verifica_romancista_id_existe(sessao, livro)
+    await verifica_romancista_id_existe(sessao, livro)
 
     if livro.titulo:
         db_livro.titulo = sanitiza_string(livro.titulo)
@@ -114,17 +114,17 @@ def atualizar_livro(
     if livro.romancista_id:
         db_livro.romancista_id = livro.romancista_id
 
-    sessao.commit()
-    sessao.refresh(db_livro)
+    await sessao.commit()
+    await sessao.refresh(db_livro)
 
     return db_livro
 
 
 @router.delete('/{livro_id}', response_model=Mensagem)
-def deletar_livro(
-    livro_id: int, sessao: T_Session, usuario_autorizado: T_UsuarioAutorizado
+async def deletar_livro(
+    livro_id: int, sessao: T_Sessao, usuario_autorizado: T_UsuarioAutorizado
 ):
-    db_livro = sessao.scalar(select(Livro).where(Livro.id == livro_id))
+    db_livro = await sessao.scalar(select(Livro).where(Livro.id == livro_id))
 
     if not db_livro:
         raise HTTPException(
@@ -132,7 +132,7 @@ def deletar_livro(
             detail='Livro não encontrado no acervo',
         )
 
-    sessao.delete(db_livro)
-    sessao.commit()
+    await sessao.delete(db_livro)
+    await sessao.commit()
 
     return {'mensagem': f'Livro {db_livro.titulo} deletadao'}

@@ -12,15 +12,14 @@ from jwt import (  # type: ignore
 )
 from pwdlib import PasswordHash  # type: ignore
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from zoneinfo import ZoneInfo
 
 from madr_novels.database import get_session
 from madr_novels.models import Usuario
-from madr_novels.schemas import TokenData
 from madr_novels.settings import Settings
 
-T_Session = Annotated[Session, Depends(get_session)]
+T_Sessao = Annotated[AsyncSession, Depends(get_session)]
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 pwd_context = PasswordHash.recommended()
@@ -50,8 +49,8 @@ def criando_token_de_acesso(data: dict):
     return jwt_codificado
 
 
-def pegar_usuario_autorizado(
-    sessao: T_Session,
+async def pegar_usuario_autorizado(
+    sessao: T_Sessao,
     token: str = Depends(oauth2_scheme),
 ):
     credenciais_invalidas = HTTPException(
@@ -62,20 +61,21 @@ def pegar_usuario_autorizado(
 
     try:
         payload = decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.SECRET_KEY, algorithms=settings.ALGORITHM
         )
-        username: str = payload.get('sub')
-        if not username:
+        subject_email = payload.get('sub')
+
+        if not subject_email:
             raise credenciais_invalidas
-        token_data = TokenData(username=username)
+
     except DecodeError:
         raise credenciais_invalidas
 
     except ExpiredSignatureError:
         raise credenciais_invalidas
 
-    usuario = sessao.scalar(
-        select(Usuario).where(Usuario.email == token_data.username)
+    usuario = await sessao.scalar(
+        select(Usuario).where(Usuario.email == subject_email)
     )
 
     if not usuario:

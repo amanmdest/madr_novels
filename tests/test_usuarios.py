@@ -1,3 +1,4 @@
+import asyncio
 from http import HTTPStatus
 
 from sqlalchemy import select
@@ -6,7 +7,7 @@ from madr_novels.models import Usuario
 from madr_novels.schemas import UsuarioSaida
 
 
-def test_criar_conta(cliente):
+def test_criar_usuario(cliente):
     response = cliente.post(
         '/usuarios/',
         json={
@@ -42,7 +43,9 @@ def test_listar_usuarios_com_usuario(cliente, usuario):
 def test_id_retornar_usuario(cliente, sessao, usuario):
     response = cliente.get('/usuarios/1')
 
-    usuario = sessao.scalar(select(Usuario).where(Usuario.id == 1))
+    usuario = asyncio.run(
+        sessao.scalar(select(Usuario).where(Usuario.id == 1))
+    )
     usuario_schema = UsuarioSaida.model_validate(usuario).model_dump()
 
     assert response.status_code == HTTPStatus.OK

@@ -1,7 +1,7 @@
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 from madr_novels.app import app
@@ -14,10 +14,8 @@ from tests.fabricas import UsuarioFabrica
 @pytest.fixture(scope='session')
 def engine():
     with PostgresContainer('postgres:16', driver='psycopg') as postgres:
-        _engine = create_engine(postgres.get_connection_url())
-
-        with _engine.begin():
-            yield _engine
+        _engine = create_async_engine(postgres.get_connection_url())
+        yield _engine
 
 
 @pytest.fixture
@@ -29,68 +27,94 @@ def cliente(sessao):
         app.dependency_overrides[get_session] = get_session_override
         yield cliente
 
-    app.dependency_overrides.clear
+    app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def sessao(engine):
-    table_registry.metadata.create_all(engine)
+@pytest_asyncio.fixture
+async def sessao(engine):
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.create_all)
 
-    with Session(engine) as sessao:
+    async with AsyncSession(engine, expire_on_commit=False) as sessao:
         yield sessao
 
-    table_registry.metadata.drop_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.drop_all)
 
 
-@pytest.fixture
-def usuario(sessao):
+@pytest_asyncio.fixture
+async def usuario(sessao):
     chave = 'avocado'
 
     usuario = UsuarioFabrica(senha=senha_hash(chave))
     sessao.add(usuario)
-    sessao.commit()
-    sessao.refresh(usuario)
+    await sessao.commit()
+    await sessao.refresh(usuario)
 
     usuario.chave_limpa = 'avocado'
 
     return usuario
 
 
-@pytest.fixture
-def outro_usuario(sessao):
+@pytest_asyncio.fixture
+async def outro_usuario(sessao):
     chave = 'potato'
 
     usuario = UsuarioFabrica(senha=senha_hash(chave))
 
     sessao.add(usuario)
-    sessao.commit()
-    sessao.refresh(usuario)
+    await sessao.commit()
+    await sessao.refresh(usuario)
 
     usuario.chave_limpa = 'potato'
 
     return usuario
 
 
-@pytest.fixture
-def romancista(sessao):
+@pytest_asyncio.fixture
+async def romancista(sessao):
     romancista = Romancista(nome='Oswald de Andrade')
 
     sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+    await sessao.commit()
+    await sessao.refresh(romancista)
 
     return romancista
 
 
-@pytest.fixture
-def livro(sessao, romancista):
+@pytest_asyncio.fixture
+async def outro_romancista(sessao):
+    romancista = Romancista(nome='Marcelo Rubens Paiva')
+
+    sessao.add(romancista)
+    await sessao.commit()
+    await sessao.refresh(romancista)
+
+    return romancista
+
+
+@pytest_asyncio.fixture
+async def livro(sessao, romancista):
     livro = Livro(
         titulo='o rei da vela', ano='1933', romancista_id=romancista.id
     )
 
     sessao.add(livro)
-    sessao.commit()
-    sessao.refresh(livro)
+    await sessao.commit()
+    await sessao.refresh(livro)
+
+    return livro
+
+
+@pytest_asyncio.fixture
+async def outro_livro(sessao, romancista):
+    livro = Livro(
+        titulo='ainda estou aqui', ano='2015', romancista_id=romancista.id
+    )
+
+    sessao.add(livro)
+    await sessao.commit()
+    await sessao.refresh(livro)
 
     return livro
 

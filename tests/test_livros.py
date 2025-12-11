@@ -55,11 +55,14 @@ def test_livro_ja_cadastrado_no_acervo(cliente, romancista, livro, token):
     }
 
 
-def test_listar_livros(cliente):
+def test_listar_livros(cliente, livro, outro_livro):
+    livro_schema = LivroSaida.model_validate(livro).model_dump()
+    outro_livro_schema = LivroSaida.model_validate(outro_livro).model_dump()
+
     response = cliente.get('/livros/')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'livros': []}
+    assert response.json() == {'livros': [livro_schema, outro_livro_schema]}
 
 
 def test_id_retornar_livro(cliente, livro):

@@ -3,13 +3,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from madr_novels.database import get_session
 from madr_novels.models import Romancista, Usuario
 from madr_novels.schemas import (
     FiltroPag,
-    RomancistaAtualiza,
+    RomancistaAtualizado,
     RomancistaEntrada,
     RomancistaSaida,
     RomancistasLista,
@@ -19,7 +19,7 @@ from madr_novels.security import pegar_usuario_autorizado
 router = APIRouter(prefix='/romancistas', tags=['romancistas'])
 
 T_FiltroPag = Annotated[FiltroPag, Query()]
-T_Session = Annotated[Session, Depends(get_session)]
+T_Sessao = Annotated[AsyncSession, Depends(get_session)]
 T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
 
 
@@ -28,12 +28,20 @@ T_UsuarioAutorizado = Annotated[Usuario, Depends(pegar_usuario_autorizado)]
     status_code=HTTPStatus.CREATED,
     response_model=RomancistaSaida,
 )
-def novo_romancista(
+async def novo_romancista(
     romancista: RomancistaEntrada,
-    sessao: T_Session,
+    sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = sessao.scalar(
+    # breakpoint()
+
+    if not romancista.nome:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='É preciso preencher todos os campos',
+        )
+
+    db_romancista = await sessao.scalar(
         select(Romancista).where(Romancista.nome == romancista.nome)
     )
 
@@ -46,17 +54,18 @@ def novo_romancista(
     romancista = Romancista(nome=romancista.nome)
 
     sessao.add(romancista)
-    sessao.commit()
-    sessao.refresh(romancista)
+    await sessao.commit()
+    await sessao.refresh(romancista)
 
     return romancista
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=RomancistasLista)
-def romancistas(filtro_pag: T_FiltroPag, sessao: T_Session):
-    romancistas = sessao.scalars(
+async def romancistas(filtro_pag: T_FiltroPag, sessao: T_Sessao):
+    romancistas = await sessao.scalars(
         select(Romancista).limit(filtro_pag.limit).offset(filtro_pag.offset)
     )
+
     return {'romancistas': romancistas}
 
 
@@ -65,8 +74,8 @@ def romancistas(filtro_pag: T_FiltroPag, sessao: T_Session):
     status_code=HTTPStatus.OK,
     response_model=RomancistaSaida,
 )
-def romancista_por_id(romancista_id: int, sessao: T_Session):
-    db_romancista = sessao.scalar(
+async def romancista_por_id(romancista_id: int, sessao: T_Sessao):
+    db_romancista = await sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
@@ -84,13 +93,13 @@ def romancista_por_id(romancista_id: int, sessao: T_Session):
     status_code=HTTPStatus.OK,
     response_model=RomancistaSaida,
 )
-def atualizar_romancista(
+async def atualizar_romancista(
     romancista_id: int,
-    romancista: RomancistaAtualiza,
-    sessao: T_Session,
+    romancista: RomancistaAtualizado,
+    sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = sessao.scalar(
+    db_romancista = await sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
@@ -102,19 +111,19 @@ def atualizar_romancista(
 
     db_romancista.nome = romancista.nome
 
-    sessao.commit()
-    sessao.refresh(db_romancista)
+    await sessao.commit()
+    await sessao.refresh(db_romancista)
 
     return db_romancista
 
 
 @router.delete('/{romancista_id}', status_code=HTTPStatus.OK)
-def deletar_romancista(
+async def deletar_romancista(
     romancista_id: int,
-    sessao: T_Session,
+    sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    db_romancista = sessao.scalar(
+    db_romancista = await sessao.scalar(
         select(Romancista).where(Romancista.id == romancista_id)
     )
 
@@ -124,7 +133,7 @@ def deletar_romancista(
             detail=f'{romancista_id} não encontrado no acervo',
         )
 
-    sessao.delete(db_romancista)
-    sessao.commit()  # TODO: author will be deleted with it's books ?
+    await sessao.delete(db_romancista)
+    await sessao.commit()
 
     return f'Romancista {db_romancista.nome} deletado'

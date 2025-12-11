@@ -30,7 +30,10 @@ class Romancista:
     nome: Mapped[str] = mapped_column(unique=True)
 
     livros: Mapped[list['Livro']] = relationship(
-        init=False, back_populates='romancista', cascade='all, delete-orphan'
+        init=False,
+        back_populates='romancista',
+        lazy='selectin',
+        cascade='all, delete-orphan',
     )
 
 
