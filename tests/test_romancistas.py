@@ -4,18 +4,16 @@ from http import HTTPStatus
 def test_novo_romancista(cliente, token):
     response = cliente.post(
         '/romancistas/',
-        json={'nome': 'Herman Melville'},
+        json={'nome': ' HeRmAn  melville '},
         headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.CREATED
-    # assert response.json() == {
-    #     'id': 1,
-    #     'nome': 'Herman Melville',
-    #     'livros': [
-    #         {'id': 0, 'titulo': 'string', 'ano': 0, 'romancista_id': 0}
-    #     ],
-    # }
+    assert response.json() == {
+        'id': 1,
+        'nome': 'herman melville',
+        'livros': [],
+    }
 
 
 def test_romancista_ja_cadastrado_no_acervo(cliente, token, romancista):
@@ -31,14 +29,27 @@ def test_romancista_ja_cadastrado_no_acervo(cliente, token, romancista):
     }
 
 
+def test_novo_romancista_campos_nao_preenchidos(cliente, token):
+    response = cliente.post(
+        '/romancistas/',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'nome': '',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'É preciso preencher todos os campos'}
+
+
 def test_listar_romancistas(cliente, romancista, outro_romancista):
     response = cliente.get('/romancistas/')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'romancistas': [
-            {'id': 1, 'livros': [], 'nome': 'Oswald de Andrade'},
-            {'id': 2, 'livros': [], 'nome': 'Marcelo Rubens Paiva'},
+            {'id': 1, 'livros': [], 'nome': 'oswald de andrade'},
+            {'id': 2, 'livros': [], 'nome': 'marcelo rubens paiva'},
         ]
     }
 
@@ -50,7 +61,7 @@ def test_id_retornar_romancista(cliente, romancista):
     assert response.json() == {
         'id': 1,
         'livros': [],
-        'nome': 'Oswald de Andrade',
+        'nome': 'oswald de andrade',
     }
 
 

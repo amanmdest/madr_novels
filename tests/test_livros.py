@@ -135,7 +135,7 @@ def test_deletar_livro(cliente, romancista, livro, token):
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'mensagem': f'Livro {livro.titulo} deletadao'}
+    assert response.json() == {'mensagem': f'Livro {livro.titulo} deletado'}
 
 
 def test_deletar_livro_nao_encontrado(cliente, token):

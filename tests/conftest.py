@@ -73,7 +73,7 @@ async def outro_usuario(sessao):
 
 @pytest_asyncio.fixture
 async def romancista(sessao):
-    romancista = Romancista(nome='Oswald de Andrade')
+    romancista = Romancista(nome='oswald de andrade')
 
     sessao.add(romancista)
     await sessao.commit()
@@ -84,7 +84,7 @@ async def romancista(sessao):
 
 @pytest_asyncio.fixture
 async def outro_romancista(sessao):
-    romancista = Romancista(nome='Marcelo Rubens Paiva')
+    romancista = Romancista(nome='marcelo rubens paiva')
 
     sessao.add(romancista)
     await sessao.commit()

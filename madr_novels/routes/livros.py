@@ -39,21 +39,19 @@ async def novo_livro(
     sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    await verifica_livro_existe_em_romancista(sessao, livro)
-    await verifica_romancista_id_existe(sessao, livro)
+    livro.titulo = sanitiza_string(livro.titulo)
 
-    if (
-        not sanitiza_string(livro.titulo)
-        or not livro.ano
-        or not livro.romancista_id
-    ):
+    if not livro.titulo or not livro.ano or not livro.romancista_id:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail='É preciso preencher todos os campos',
         )
 
+    await verifica_livro_existe_em_romancista(sessao, livro)
+    await verifica_romancista_id_existe(sessao, livro)
+
     livro = Livro(
-        titulo=sanitiza_string(livro.titulo),
+        titulo=livro.titulo,
         ano=livro.ano,
         romancista_id=livro.romancista_id,
     )
@@ -135,4 +133,4 @@ async def deletar_livro(
     await sessao.delete(db_livro)
     await sessao.commit()
 
-    return {'mensagem': f'Livro {db_livro.titulo} deletadao'}
+    return {'mensagem': f'Livro {db_livro.titulo} deletado'}

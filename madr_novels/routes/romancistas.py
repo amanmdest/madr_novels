@@ -15,6 +15,7 @@ from madr_novels.schemas import (
     RomancistasLista,
 )
 from madr_novels.security import pegar_usuario_autorizado
+from madr_novels.utils import sanitiza_string
 
 router = APIRouter(prefix='/romancistas', tags=['romancistas'])
 
@@ -33,7 +34,7 @@ async def novo_romancista(
     sessao: T_Sessao,
     usuario_autorizado: T_UsuarioAutorizado,
 ):
-    # breakpoint()
+    romancista.nome = sanitiza_string(romancista.nome)
 
     if not romancista.nome:
         raise HTTPException(
@@ -109,7 +110,7 @@ async def atualizar_romancista(
             detail='Romancista não encontrado no acervo',
         )
 
-    db_romancista.nome = romancista.nome
+    db_romancista.nome = sanitiza_string(romancista.nome)
 
     await sessao.commit()
     await sessao.refresh(db_romancista)
