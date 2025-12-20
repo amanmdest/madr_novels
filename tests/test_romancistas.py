@@ -105,7 +105,10 @@ def test_deletar_romancista(cliente, romancista, token):
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == f'Romancista {romancista.nome} deletado'
+    assert (
+        response.json()
+        == f'Romancista {romancista.nome} deletado do acervo'
+    )
 
 
 def test_deletar_romancista_nao_encontrado(cliente, token):

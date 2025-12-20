@@ -133,4 +133,4 @@ async def deletar_livro(
     await sessao.delete(db_livro)
     await sessao.commit()
 
-    return {'mensagem': f'Livro {db_livro.titulo} deletado'}
+    return {'mensagem': f'Livro {db_livro.titulo} deletado do acervo'}

@@ -137,4 +137,4 @@ async def deletar_romancista(
     await sessao.delete(db_romancista)
     await sessao.commit()
 
-    return f'Romancista {db_romancista.nome} deletado'
+    return f'Romancista {db_romancista.nome} deletado do acervo'
