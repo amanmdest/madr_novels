@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from madr_novels.routes import auth, livros, romancistas, usuarios
 from madr_novels.schemas import Mensagem
 
-app = FastAPI(title='MADR')
+app = FastAPI(title='MADR - Acervo Digital de Romancistas')
 
 app.include_router(usuarios.router)
 app.include_router(romancistas.router)
